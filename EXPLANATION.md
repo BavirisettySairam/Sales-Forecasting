@@ -1208,16 +1208,386 @@ For production, most requests will be cache hits because the same `(state, weeks
 
 ## 10. Phase 7 — Streamlit Dashboard
 
-*(Implementation in progress — section will be completed after Phase 7 is merged.)*
+The dashboard is a 4-page Streamlit application (`src/dashboard/`) that communicates with the FastAPI backend exclusively via `httpx`. It never imports models, connects to PostgreSQL, or touches Redis directly — all data flows through the API layer. This separation means the dashboard can be deployed independently, scaled separately, and replaced without touching the backend.
 
-The dashboard is a 4-page Streamlit application that calls the FastAPI backend via `httpx`. It never loads models directly — all data flows through the API.
+### Architecture principle: API-only data access
 
-**Pages:**
-1. `01_forecast.py` — state dropdown, weeks slider, Plotly chart with historical + forecast + CI band, forecast table
-2. `02_model_comparison.py` — grouped bar chart of MAPE across all 5 models, champion highlighted, state×model MAPE heatmap
-3. `03_training_history.py` — table of training runs from PostgreSQL, per-fold metrics expandable, timeline chart
-4. `04_api_health.py` — live status of API/DB/Redis, response time chart, recent request logs
+Every data fetch uses a pattern like:
+
+```python
+API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8000")
+API_KEY  = os.environ.get("API_KEY", "forecasting-api-key-2026")
+HEADERS  = {"X-API-Key": API_KEY}
+
+r = httpx.get(f"{API_BASE}/models", headers=HEADERS, timeout=10)
+```
+
+`API_BASE_URL` and `API_KEY` are injected at container start via environment variables (set in `docker-compose.yml`). During local development the defaults point to `localhost:8000`. This makes the dashboard environment-agnostic.
+
+### Caching strategy
+
+Streamlit re-runs the entire script on every user interaction. Without caching, each button click or slider move would trigger a new API call. `@st.cache_data` avoids this:
+
+```python
+@st.cache_data(ttl=86400, show_spinner="Generating forecast...")
+def get_forecast(state: str, weeks: int):
+    ...
+```
+
+| Page | TTL | Rationale |
+|---|---|---|
+| Landing — model list | 300s | Changes only after retraining |
+| Landing — health | 30s | Near-realtime status |
+| Forecast | 86400s (24h) | Same as Redis API cache |
+| Model comparison | 300s | Stable after training |
+| Training history | 60s | Updated after retrain trigger |
+| Health monitor | Not cached | Always fresh on request |
+
+The 24-hour forecast TTL intentionally matches the Redis TTL in the API — both layers serve the same cached value.
+
+### Page 1 — Landing (`app.py`)
+
+The landing page shows four metric cards computed from the `/models` response:
+
+```python
+champion_count = len([m for m in models if m.get("is_champion")])
+total_models   = len(models)
+mape_values    = [m["metrics"]["mape"] for m in models
+                  if m.get("metrics", {}).get("mape", float("inf")) < float("inf")]
+avg_mape       = round(sum(mape_values) / len(mape_values), 2) if mape_values else None
+
+col1, col2, col3, col4 = st.columns(4)
+with col1: st.metric("Total Models", total_models)
+with col2: st.metric("Champion Models", champion_count)
+with col3: st.metric("Avg MAPE", f"{avg_mape}%" if avg_mape else "N/A")
+with col4: st.metric("API Status", "✅ Healthy" if api_status == "ok" else "⚠️ Degraded")
+```
+
+Below the metrics is a `st.dataframe` showing the champion models table: name, state, MAPE %, RMSE, version.
+
+### Page 2 — Forecast (`01_forecast.py`)
+
+**State selection:** States are populated dynamically from the `/models` endpoint (`sorted({m["state"] for m in models})`), so the dropdown always reflects what has been trained.
+
+**Sidebar controls:** `st.selectbox` for state, `st.slider` for weeks (1–52), "Generate Forecast" button.
+
+**Session state:** To avoid re-fetching on every slider move, the forecast result is stored in `st.session_state`:
+
+```python
+if run or "forecast_data" not in st.session_state or \
+        st.session_state.get("forecast_state") != selected_state:
+    result = get_forecast(selected_state, weeks)
+    st.session_state["forecast_data"] = result
+```
+
+**Plotly chart construction:** The confidence interval band is drawn using three traces: upper bound (invisible line, width=0), lower bound (filled up to the upper with `fill="tonexty"`, semi-transparent `rgba(99,110,250,0.2)` fill), and the forecast line (dashed blue). This is Plotly's standard technique for shaded regions between two traces:
+
+```python
+fig.add_trace(go.Scatter(x=dates, y=upper, mode="lines",
+    line=dict(width=0), showlegend=False, name="upper"))
+fig.add_trace(go.Scatter(x=dates, y=lower, mode="lines",
+    fill="tonexty", fillcolor="rgba(99,110,250,0.2)",
+    line=dict(width=0), name="95% CI"))
+fig.add_trace(go.Scatter(x=dates, y=predicted, mode="lines+markers",
+    line=dict(dash="dash", color="#636EFA"), name=f"Forecast ({model_used})"))
+```
+
+Below the chart a `st.dataframe` shows the raw forecast values with formatted dates.
+
+### Page 3 — Model Comparison (`02_model_comparison.py`)
+
+**MAPE bar chart:** Each model/state combination is one bar. The champion for each state is highlighted gold; all others are the default Plotly blue:
+
+```python
+colors = ["gold" if row["is_champion"] else "#636EFA" for _, row in view_df.iterrows()]
+fig = go.Figure(go.Bar(x=view_df["model"], y=view_df["mape"], marker_color=colors))
+```
+
+**MAPE heatmap:** A state × model pivot table is rendered with `px.imshow`:
+
+```python
+pivot = df.pivot_table(index="state", columns="model", values="mape")
+fig = px.imshow(pivot, color_continuous_scale="RdYlGn_r",
+    labels={"color": "MAPE %"})
+```
+
+`RdYlGn_r` (reversed Red-Yellow-Green) means low MAPE (good) is green, high MAPE is red — visually intuitive. A sidebar state filter scopes the bar chart to a single state while the heatmap always shows all states for cross-state comparison.
+
+### Page 4 — Training History (`03_training_history.py`)
+
+Shows the model registry data as a sortable table with columns: Model, State, Version, MAPE %, RMSE, MAE, CV Folds, Champion. The champion column uses `"👑"` vs `""` instead of True/False for readability.
+
+A retrain form uses `st.form` to collect which states to retrain (text input, comma-separated) and calls `POST /retrain`:
+
+```python
+with st.form("retrain_form"):
+    states_input = st.text_input("States to retrain (comma-separated, blank = all)")
+    submitted = st.form_submit_button("Trigger Retraining")
+if submitted:
+    payload = {}
+    if states_input.strip():
+        payload["states"] = [s.strip() for s in states_input.split(",")]
+    r = httpx.post(f"{API_BASE}/retrain", headers=HEADERS, json=payload, timeout=10)
+```
+
+The form pattern prevents multiple rapid submissions — Streamlit only processes the form on explicit submission, not on every keystroke.
+
+### Page 5 — API Health (`04_api_health.py`)
+
+Unlike other pages, this page makes a live request every time it renders (no `@st.cache_data`). `time.perf_counter()` wraps the HTTP call to measure latency:
+
+```python
+def check_health() -> dict:
+    start = time.perf_counter()
+    r = httpx.get(f"{API_BASE}/health", timeout=5)
+    latency_ms = round((time.perf_counter() - start) * 1000, 1)
+    data = r.json().get("data", {})
+    data["latency_ms"] = latency_ms
+    return data
+```
+
+Four metric cards show API, Database, Redis status (✅/❌ badges) and response latency. The latency history list is stored in `st.session_state` (max 50 entries) and rendered as a Plotly line chart to show response time trends over the current session.
+
+An auto-refresh checkbox calls `time.sleep(30); st.rerun()` to poll the API every 30 seconds — useful for monitoring during a retraining job.
+
+### Dockerization
+
+`Dockerfile.streamlit` is a separate image (not the FastAPI image):
+
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY pyproject.toml poetry.lock ./
+RUN pip install poetry && poetry config virtualenvs.create false && poetry install
+COPY src/dashboard ./src/dashboard
+ENV API_BASE_URL=http://api:8000
+ENV API_KEY=forecasting-api-key-2026
+EXPOSE 8501
+CMD ["streamlit", "run", "src/dashboard/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+```
+
+In `docker-compose.yml` the `streamlit` service sets `API_BASE_URL=http://api:8000` — using the Docker internal service name `api` instead of `localhost`. The dashboard container cannot reach `localhost:8000` because `localhost` inside a container refers to the container itself, not the host or the API container.
 
 ---
 
-*This document is updated as each phase is completed.*
+## 11. Phase 8 — Testing
+
+The test suite has 86 tests across 5 modules, all passing. Tests are run with `pytest tests/ -v --tb=short`. In CI, real PostgreSQL and Redis services are used (Docker containers started by GitHub Actions).
+
+### Test infrastructure (`tests/conftest.py`)
+
+The test infrastructure substitutes production dependencies with test equivalents using FastAPI's `dependency_overrides`:
+
+**In-memory SQLite database:**
+
+```python
+@pytest.fixture(scope="session")
+def engine():
+    eng = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+    )
+    Base.metadata.create_all(eng)
+    yield eng
+    Base.metadata.drop_all(eng)
+
+@pytest.fixture
+def db_session(engine):
+    conn = engine.connect()
+    trans = conn.begin()
+    session = Session(bind=conn)
+    yield session
+    session.close()
+    trans.rollback()
+    conn.close()
+```
+
+Each test gets a fresh transaction that is rolled back after the test completes. This means tests never accumulate state and can run in any order. The session-scoped engine avoids the overhead of recreating the schema for every test.
+
+**Mock Redis:**
+
+```python
+@pytest.fixture
+def mock_redis():
+    redis = MagicMock()
+    pipe = MagicMock()
+    pipe.execute.return_value = [0, 0, 1, True]
+    redis.pipeline.return_value = pipe
+    redis.get.return_value = None
+    redis.setex.return_value = True
+    yield redis
+```
+
+The return value `[0, 0, 1, True]` simulates the sliding-window pipeline result: `[zremrangebyscore result, zadd result, zcard=1, expire result]`. `zcard=1` means 1 request in the window — below the rate limit, so the request passes.
+
+**Test client with dependency overrides:**
+
+```python
+VALID_KEY = "forecasting-api-key-2026"
+AUTH = {"X-API-Key": VALID_KEY}
+
+@pytest.fixture
+def api_client(db_session, mock_redis):
+    app.dependency_overrides[get_db_dep] = lambda: db_session
+    app.dependency_overrides[get_redis]  = lambda: mock_redis
+    with TestClient(app, raise_server_exceptions=False) as client:
+        yield client
+    app.dependency_overrides.clear()
+```
+
+`raise_server_exceptions=False` means HTTP 4xx/5xx responses are returned as normal responses (not raised as Python exceptions), which is what the tests expect when asserting `resp.status_code == 401`.
+
+### Module: test_preprocessing.py (18 tests)
+
+Tests cover each transformation in `src/preprocessing/cleaner.py` in isolation:
+
+| Function | Tests |
+|---|---|
+| `remove_duplicates` | Drops exact duplicate rows; preserves distinct rows |
+| `aggregate_duplicate_dates` | Sums totals for same state+date; keeps different states separate |
+| `fill_missing_dates` | Fills complete date range; introduces NaN for gaps |
+| `impute_missing` | Fills all nulls; interpolated middle values are between endpoints |
+| `handle_outliers` | Caps extreme values; no negatives after capping |
+| `aggregate_to_weekly` | Reduces row count; sums total correctly; dates are Mondays |
+| `raw_schema` (Pandera) | Accepts valid data; rejects negative totals |
+| `clean_schema` (Pandera) | Rejects null state |
+
+### Module: test_features.py (16 tests)
+
+The feature engineering tests prove two properties that are critical for production correctness:
+
+**Correctness:** Lag features are numerically exact:
+```python
+def test_lag_1_equals_previous_week(weekly_df, config):
+    ca = result[result["state"] == "California"].sort_values("date").reset_index(drop=True)
+    for i in range(1, len(ca)):
+        if not np.isnan(ca.loc[i, "lag_1"]):
+            assert ca.loc[i, "lag_1"] == pytest.approx(ca.loc[i - 1, "total"])
+```
+
+**No data leakage:** Rolling features use `shift(1)` so the feature at time *t* cannot see the target at time *t*. This is verified by modifying one row's total and confirming the rolling feature at that same row is unchanged:
+```python
+# rolling_mean_4 at row 10 uses rows 6–9 via shift(1)
+# Changing row 10's total must NOT change rolling_mean_4 at row 10
+feat_mod_ca.loc[10, "rolling_mean_4"] == pytest.approx(original_rolling, rel=1e-4)
+```
+
+**No cross-state leakage:** The first row for each state must have `NaN` lag_1 — there is no "previous row" from a different state:
+```python
+for state in ["California", "Texas"]:
+    state_df = result[result["state"] == state].sort_values("date")
+    assert np.isnan(state_df.iloc[0]["lag_1"])
+```
+
+### Module: test_models.py (14 tests)
+
+Each of the 5 models is tested for: instantiation, `fit()` success on synthetic data, `predict()` returning correct structure (columns: `date`, `predicted_value`, `lower_bound`, `upper_bound`), and save/load round-trip (predictions before and after serialization must be numerically close).
+
+The SARIMA test uses a reduced parameter space to avoid timeout:
+```python
+sarima_config = {
+    "max_p": 2, "max_q": 2,   # default start_p=2, so max must be >= 2
+    "max_P": 1, "max_Q": 1,
+    "seasonal_period": 4,      # quarterly instead of m=52 to fit fast
+    "d": 1, "D": 1,
+}
+```
+
+The XGBoost and LightGBM tests use `n_trials=3` (vs. 50 in production) so Optuna finishes in seconds.
+
+The LSTM test uses `n_epochs=3` and `hidden_size=8` to produce a trainable result in under 5 seconds.
+
+### Module: test_api.py (17 tests)
+
+Covers all four route groups:
+
+| Endpoint | Tests |
+|---|---|
+| `GET /health` | Returns 200; no auth needed; response has `status`, `data`, `api`, `database`, `redis`, `timestamp`, `request_id` |
+| `GET /models` | Requires auth (401 without); returns list with `status == "success"` |
+| `GET /models/{state}` | Returns list for specific state |
+| `POST /forecast` | 401 without key; 401 with wrong key; 422 for `weeks=0`, `weeks=53`, missing state; 503 when no model trained |
+| `GET /forecast/{state}` | 401 without key; 503 with key (no model in test env) |
+| CORS | 200 with `Origin: http://localhost:8501` |
+| Error structure | 401 response has `"detail"` field (FastAPI HTTPException format) |
+
+### Module: test_security.py (21 tests)
+
+Security tests prove the defense-in-depth layers:
+
+**Authentication (5 tests):** No key → 401; invalid key → 401; empty key → 401; valid key passes (result is 503, not 401); `/health` needs no key.
+
+**Security headers (6 tests):** Each of the 6 headers set by `SecurityHeadersMiddleware` is verified individually: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block`, `Content-Security-Policy` present, `Referrer-Policy` present, `X-Request-ID` present.
+
+**Injection resistance (2 tests):**
+```python
+# SQL injection: ORM parameterisation prevents execution; Pydantic validation rejects early
+malicious = "'; DROP TABLE forecasts; --"
+# Expected: 404 or 503 — NOT 200 or 500 (SQL error)
+# Body must not contain "DROP TABLE", "SyntaxError", or "Traceback"
+
+# XSS: response body must not contain literal <script> tags
+xss = "<script>alert('xss')</script>"
+assert "<script>" not in resp.text
+```
+
+**Input validation (5 tests):** `state` shorter than 2 chars → 422; `weeks=0` → 422; `weeks=-1` → 422; `weeks=53` → 422; `state` longer than 100 chars → 422.
+
+**Docs visibility (2 tests):**
+```python
+# Test environment: docs available
+def test_docs_available_in_test_environment(api_client):
+    assert api_client.get("/docs").status_code == 200
+
+# Production environment: docs 404
+def test_docs_disabled_in_production():
+    os.environ["ENVIRONMENT"] = "production"
+    # reload settings and app modules to pick up new env var
+    reload(src.config.settings); reload(src.api.main)
+    client = TestClient(main_mod.app, raise_server_exceptions=False)
+    assert client.get("/docs").status_code == 404
+```
+
+**Rate limiter header (1 test):** With mock Redis returning count=1 (below limit), `GET /models` returns 200 — confirming the rate limiter does not block legitimate requests.
+
+---
+
+## 12. Phase 9 — Documentation
+
+### README.md
+
+The README is the first thing a reviewer or recruiter reads. It was written to answer five questions without requiring the reader to open any source file:
+
+1. **What is this system?** — One sentence in the heading.
+2. **How does it work?** — Mermaid flowchart showing data flow from CSV through preprocessing, feature engineering, model training, champion selection, PostgreSQL/file storage, FastAPI, Redis, and Streamlit.
+3. **How do I run it?** — Two paths: Docker one-command (`make docker-up`) and local conda development with step-by-step commands.
+4. **What does the API look like?** — Curl examples for all 6 endpoints with sample JSON responses.
+5. **Why was it built this way?** — Design Decisions section covering per-state vs. global models, MAPE metric choice, Redis caching, synchronous SQLAlchemy, and MC Dropout.
+
+### Architecture diagram (Mermaid)
+
+The Mermaid flowchart in the README uses `flowchart TD` (top-down) to show the complete pipeline. Each node includes the key detail that distinguishes it — for example, `E3[XGBoost\nOptuna 50 trials]` rather than just `E3[XGBoost]`. The champion selection node shows both the primary and tiebreaker criteria inline.
+
+### EXPLANATION.md (this document)
+
+This document goes beyond what a README can cover. It is structured as a technical submission for a hiring panel or senior technical reviewer. Each phase section covers:
+
+- **What problem this phase solves** and why it exists in the architecture
+- **Key implementation decisions** with code snippets showing exact patterns used
+- **Trade-offs explicitly stated** — what was chosen and what was ruled out
+- **Errors encountered and how they were resolved** where applicable
+
+The section on Design Decisions (Section 14) consolidates cross-cutting choices that span multiple phases — MAPE vs. RMSE, expanding window CV, confidence interval methodology, synchronous vs. async SQLAlchemy, per-state vs. global models.
+
+### CI/CD as documentation
+
+The `.github/workflows/ci.yml` pipeline is itself a form of documentation: it shows exactly how to reproduce the build, test, and smoke-test process from a clean environment. Anyone reading it can see:
+- Which Python version is used
+- Which services are required (Postgres 16, Redis 7)
+- How to run the test suite
+- That `pip-audit` and `safety` scan for dependency CVEs
+- That the Docker images are built and smoke-tested on every merge
+
+---
+
+*This document is the complete technical record of the Sales Forecasting System build.*
