@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 
 from src.api.auth import verify_api_key
-from src.api.rate_limiter import RateLimiter
 from src.api.dependencies import get_redis
+from src.api.rate_limiter import RateLimiter
 from src.pipeline.registry import list_models
 from src.utils.response import success_response
 
@@ -21,5 +21,12 @@ async def get_all_models(redis=Depends(get_redis)):
 async def get_models_for_state(state: str, redis=Depends(get_redis)):
     all_models = list_models()
     state_clean = state.strip().title()
-    filtered = [m for m in all_models if (m.get("state") or "").strip().title() == state_clean or m.get("state") is None]
-    return success_response(data=filtered, message=f"{len(filtered)} model(s) for {state_clean}")
+    filtered = [
+        m
+        for m in all_models
+        if (m.get("state") or "").strip().title() == state_clean
+        or m.get("state") is None
+    ]
+    return success_response(
+        data=filtered, message=f"{len(filtered)} model(s) for {state_clean}"
+    )

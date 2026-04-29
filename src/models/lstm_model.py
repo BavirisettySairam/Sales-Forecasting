@@ -12,9 +12,17 @@ from src.utils.logger import logger
 
 
 class _LSTMNet(nn.Module):
-    def __init__(self, input_size: int, hidden_size: int, num_layers: int, dropout: float) -> None:
+    def __init__(
+        self, input_size: int, hidden_size: int, num_layers: int, dropout: float
+    ) -> None:
         super().__init__()
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, dropout=dropout if num_layers > 1 else 0.0)
+        self.lstm = nn.LSTM(
+            input_size,
+            hidden_size,
+            num_layers,
+            batch_first=True,
+            dropout=dropout if num_layers > 1 else 0.0,
+        )
         self.dropout = nn.Dropout(dropout)
         self.fc = nn.Linear(hidden_size, 1)
 
@@ -34,7 +42,7 @@ class LSTMForecaster(BaseForecaster):
     def _make_sequences(self, values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         X, y = [], []
         for i in range(self._seq_len, len(values)):
-            X.append(values[i - self._seq_len:i])
+            X.append(values[i - self._seq_len : i])
             y.append(values[i])
         return np.array(X), np.array(y)
 
@@ -54,7 +62,9 @@ class LSTMForecaster(BaseForecaster):
         lr = cfg.get("learning_rate", 0.001)
         batch = cfg.get("batch_size", 32)
 
-        net = _LSTMNet(input_size=1, hidden_size=hidden, num_layers=layers, dropout=dropout)
+        net = _LSTMNet(
+            input_size=1, hidden_size=hidden, num_layers=layers, dropout=dropout
+        )
         opt = torch.optim.Adam(net.parameters(), lr=lr)
         loss_fn = nn.MSELoss()
 
@@ -72,10 +82,14 @@ class LSTMForecaster(BaseForecaster):
                 opt.step()
                 epoch_loss += loss.item()
             if (epoch + 1) % 10 == 0:
-                logger.debug("LSTM epoch", epoch=epoch + 1, loss=round(epoch_loss / len(loader), 5))
+                logger.debug(
+                    "LSTM epoch",
+                    epoch=epoch + 1,
+                    loss=round(epoch_loss / len(loader), 5),
+                )
 
         self.model = net
-        self._last_seq = scaled[-self._seq_len:]
+        self._last_seq = scaled[-self._seq_len :]
         if isinstance(train_data.index, pd.DatetimeIndex):
             self._last_date = train_data.index[-1]
         elif "date" in train_data.columns:
@@ -91,7 +105,6 @@ class LSTMForecaster(BaseForecaster):
 
         cfg = self.config.get("lstm", {})
         mc_passes = cfg.get("mc_passes", 100)
-        dropout = cfg.get("dropout", 0.2)
 
         # Enable dropout at inference for MC Dropout CI
         self.model.train()
@@ -106,7 +119,11 @@ class LSTMForecaster(BaseForecaster):
             local_seq = seq.copy()
             pass_preds = []
             for _ in range(horizon):
-                x = torch.tensor(local_seq[-self._seq_len:], dtype=torch.float32).unsqueeze(0).unsqueeze(-1)
+                x = (
+                    torch.tensor(local_seq[-self._seq_len :], dtype=torch.float32)
+                    .unsqueeze(0)
+                    .unsqueeze(-1)
+                )
                 with torch.no_grad():
                     p = self.model(x).item()
                 pass_preds.append(p)
@@ -131,23 +148,28 @@ class LSTMForecaster(BaseForecaster):
             start = pd.Timestamp("today")
         dates = pd.date_range(start=start, periods=horizon, freq="W-MON")
 
-        return pd.DataFrame({
-            "date": dates,
-            "predicted_value": mean_val,
-            "lower_bound": lower_val,
-            "upper_bound": upper_val,
-        })
+        return pd.DataFrame(
+            {
+                "date": dates,
+                "predicted_value": mean_val,
+                "lower_bound": lower_val,
+                "upper_bound": upper_val,
+            }
+        )
 
     def save(self, path: str) -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         torch.save(self.model.state_dict(), path + ".pt")
-        joblib.dump({
-            "scaler": self._scaler,
-            "last_seq": self._last_seq,
-            "seq_len": self._seq_len,
-            "model_cfg": self.config.get("lstm", {}),
-            "last_date": getattr(self, "_last_date", None),
-        }, path + ".meta")
+        joblib.dump(
+            {
+                "scaler": self._scaler,
+                "last_seq": self._last_seq,
+                "seq_len": self._seq_len,
+                "model_cfg": self.config.get("lstm", {}),
+                "last_date": getattr(self, "_last_date", None),
+            },
+            path + ".meta",
+        )
         logger.info("LSTM saved", path=path)
 
     def load(self, path: str) -> None:

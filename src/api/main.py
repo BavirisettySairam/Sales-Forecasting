@@ -34,6 +34,7 @@ async def lifespan(app: FastAPI):
 
     try:
         from src.cache.redis_client import redis_client
+
         redis_client.health_check()
         logger.info("Redis connected")
     except Exception as exc:
@@ -49,7 +50,7 @@ _redoc_url = None if settings.environment == "production" else "/redoc"
 
 app = FastAPI(
     title="Forecasting System API",
-    description="Production-ready time series forecasting with automatic model selection",
+    description="Production-ready time series forecasting with automatic model selection",  # noqa: E501
     version="1.0.0",
     lifespan=lifespan,
     docs_url=_docs_url,

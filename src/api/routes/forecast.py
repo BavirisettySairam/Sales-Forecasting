@@ -5,13 +5,17 @@ from sqlalchemy.orm import Session
 
 from src.api.auth import verify_api_key
 from src.api.dependencies import get_db_dep, get_redis
-from src.api.exceptions import ForecastGenerationError, ModelNotTrainedException, StateNotFoundException
+from src.api.exceptions import (
+    ForecastGenerationError,
+    ModelNotTrainedException,
+    StateNotFoundException,
+)
 from src.api.rate_limiter import RateLimiter
 from src.api.schemas.request import ForecastRequest
 from src.api.schemas.response import ForecastData, ForecastPoint
 from src.cache.redis_client import RedisClient
 from src.db.models import Forecast
-from src.pipeline.registry import get_champion, load_model
+from src.pipeline.registry import get_champion
 from src.utils.logger import logger
 from src.utils.response import success_response
 
@@ -57,12 +61,13 @@ async def _generate_forecast(state: str, weeks: int, db: Session, redis_raw) -> 
     model_path = champion["path"]
     mape = champion.get("metrics", {}).get("mape", 0.0)
 
-    from src.models.sarima_model import SARIMAForecaster
-    from src.models.prophet_model import ProphetForecaster
-    from src.models.xgboost_model import XGBoostForecaster
+    import yaml
+
     from src.models.lightgbm_model import LightGBMForecaster
     from src.models.lstm_model import LSTMForecaster
-    import yaml
+    from src.models.prophet_model import ProphetForecaster
+    from src.models.sarima_model import SARIMAForecaster
+    from src.models.xgboost_model import XGBoostForecaster
 
     model_cls_map = {
         "sarima": SARIMAForecaster,
@@ -105,14 +110,18 @@ async def _generate_forecast(state: str, weeks: int, db: Session, redis_raw) -> 
     rc.set_forecast(state, weeks, data)
 
     for pt in points:
-        db.add(Forecast(
-            state=state,
-            model_name=model_name,
-            forecast_date=datetime.fromisoformat(pt.date).replace(tzinfo=timezone.utc),
-            predicted_value=pt.predicted_value,
-            lower_bound=pt.lower_bound,
-            upper_bound=pt.upper_bound,
-        ))
+        db.add(
+            Forecast(
+                state=state,
+                model_name=model_name,
+                forecast_date=datetime.fromisoformat(pt.date).replace(
+                    tzinfo=timezone.utc
+                ),
+                predicted_value=pt.predicted_value,
+                lower_bound=pt.lower_bound,
+                upper_bound=pt.upper_bound,
+            )
+        )
     db.commit()
 
     return data

@@ -13,7 +13,10 @@ def select_best_model(cv_results: dict[str, dict[str, float]]) -> str:
 
     ranked = sorted(
         cv_results.items(),
-        key=lambda kv: (kv[1].get("mape", float("inf")), kv[1].get("rmse", float("inf"))),
+        key=lambda kv: (
+            kv[1].get("mape", float("inf")),
+            kv[1].get("rmse", float("inf")),
+        ),
     )
 
     champion = ranked[0][0]
@@ -31,7 +34,10 @@ def rank_models(cv_results: dict[str, dict[str, float]]) -> list[dict]:
     """Return models ranked by mape ascending, with rank field added."""
     ranked = sorted(
         cv_results.items(),
-        key=lambda kv: (kv[1].get("mape", float("inf")), kv[1].get("rmse", float("inf"))),
+        key=lambda kv: (
+            kv[1].get("mape", float("inf")),
+            kv[1].get("rmse", float("inf")),
+        ),
     )
     return [
         {"rank": i + 1, "model": name, **metrics, "is_champion": i == 0}

@@ -1,10 +1,9 @@
 """Security tests — auth, rate limiting, headers, injection, whitelist, docs."""
-import pytest
 
-from tests.conftest import AUTH, VALID_KEY
-
+from tests.conftest import AUTH
 
 # ── API key authentication ────────────────────────────────────────────────
+
 
 def test_no_api_key_returns_401(api_client):
     resp = api_client.post("/forecast", json={"state": "California", "weeks": 4})
@@ -46,6 +45,7 @@ def test_health_endpoint_needs_no_key(api_client):
 
 # ── Security response headers ─────────────────────────────────────────────
 
+
 def test_x_content_type_options_header(api_client):
     resp = api_client.get("/health")
     assert resp.headers.get("X-Content-Type-Options") == "nosniff"
@@ -78,6 +78,7 @@ def test_request_id_header_present(api_client):
 
 # ── SQL injection attempt ─────────────────────────────────────────────────
 
+
 def test_sql_injection_in_state_field_rejected(api_client):
     # Pydantic validates the field; ORM parameterises queries — both layers protect
     malicious = "'; DROP TABLE forecasts; --"
@@ -106,6 +107,7 @@ def test_xss_attempt_in_state_field(api_client):
 
 
 # ── Input validation ──────────────────────────────────────────────────────
+
 
 def test_state_too_short_rejected(api_client):
     resp = api_client.post(
@@ -154,6 +156,7 @@ def test_oversized_state_field_rejected(api_client):
 
 # ── Docs disabled in production ───────────────────────────────────────────
 
+
 def test_docs_available_in_test_environment(api_client):
     resp = api_client.get("/docs")
     # In test env (ENVIRONMENT=test), docs should be available
@@ -162,14 +165,19 @@ def test_docs_available_in_test_environment(api_client):
 
 def test_docs_disabled_in_production():
     import os
+
     os.environ["ENVIRONMENT"] = "production"
     try:
         from importlib import reload
+
         import src.config.settings as s_mod
+
         reload(s_mod)
         import src.api.main as main_mod
+
         reload(main_mod)
         from fastapi.testclient import TestClient
+
         client = TestClient(main_mod.app, raise_server_exceptions=False)
         resp = client.get("/docs")
         assert resp.status_code == 404
@@ -178,6 +186,7 @@ def test_docs_disabled_in_production():
 
 
 # ── Rate limiter structure ────────────────────────────────────────────────
+
 
 def test_rate_limiter_returns_headers_on_success(api_client, mock_redis):
     # Patch the pipeline execute to simulate 1 request in window

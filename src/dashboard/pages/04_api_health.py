@@ -35,15 +35,22 @@ def check_health() -> dict:
             return data
         return {"api": "error", "status_code": r.status_code, "latency_ms": latency_ms}
     except Exception as e:
-        return {"api": "unreachable", "error": str(e), "latency_ms": None, "status_code": None}
+        return {
+            "api": "unreachable",
+            "error": str(e),
+            "latency_ms": None,
+            "status_code": None,
+        }
 
 
 health = check_health()
 
 col1, col2, col3, col4 = st.columns(4)
 
+
 def status_badge(val: str) -> str:
     return "✅" if val == "ok" else "❌"
+
 
 with col1:
     api_s = health.get("api", "unknown")
@@ -79,12 +86,14 @@ if lat is not None:
 history = st.session_state["latency_history"]
 if len(history) > 1:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        y=history,
-        mode="lines+markers",
-        line=dict(color="#636EFA", width=2),
-        name="Latency (ms)",
-    ))
+    fig.add_trace(
+        go.Scatter(
+            y=history,
+            mode="lines+markers",
+            line=dict(color="#636EFA", width=2),
+            name="Latency (ms)",
+        )
+    )
     fig.update_layout(
         title="API Response Time (last 50 checks)",
         yaxis_title="Latency (ms)",
@@ -94,7 +103,9 @@ if len(history) > 1:
     )
     st.plotly_chart(fig, use_container_width=True)
 else:
-    st.info("Latency history builds up as you keep this page open or enable auto-refresh.")
+    st.info(
+        "Latency history builds up as you keep this page open or enable auto-refresh."
+    )
 
 st.subheader("Endpoint Spot-Check")
 
@@ -113,8 +124,22 @@ for method, path, body, auth in endpoints:
         else:
             r = httpx.post(f"{API_BASE}{path}", headers=h, json=body, timeout=5)
         ms = round((time.perf_counter() - t0) * 1000, 1)
-        results.append({"Endpoint": f"{method} {path}", "Status": r.status_code, "Latency (ms)": ms, "OK": "✅" if r.status_code < 400 else "❌"})
-    except Exception as e:
-        results.append({"Endpoint": f"{method} {path}", "Status": "Error", "Latency (ms)": "—", "OK": "❌"})
+        results.append(
+            {
+                "Endpoint": f"{method} {path}",
+                "Status": r.status_code,
+                "Latency (ms)": ms,
+                "OK": "✅" if r.status_code < 400 else "❌",
+            }
+        )
+    except Exception:
+        results.append(
+            {
+                "Endpoint": f"{method} {path}",
+                "Status": "Error",
+                "Latency (ms)": "—",
+                "OK": "❌",
+            }
+        )
 
 st.dataframe(pd.DataFrame(results), use_container_width=True, hide_index=True)

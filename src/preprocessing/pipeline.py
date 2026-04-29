@@ -67,7 +67,9 @@ def run(
         outlier_method=outlier_method,
         outlier_threshold=outlier_threshold,
     )
-    logger.info(f"[Pipeline] After cleaning: {len(df_clean)} weekly rows, {df_clean['state'].nunique()} states")
+    logger.info(
+        f"[Pipeline] After cleaning: {len(df_clean)} weekly rows, {df_clean['state'].nunique()} states"  # noqa: E501
+    )
 
     # ------------------------------------------------------------------ #
     # 4. Validate clean schema
@@ -94,7 +96,7 @@ def run(
     date_range = f"{df_clean['date'].min().date()} → {df_clean['date'].max().date()}"
     states = sorted(df_clean["state"].unique().tolist())
     logger.info(
-        f"[Pipeline] Summary | dates: {date_range} | states ({len(states)}): {states[:5]}{'...' if len(states) > 5 else ''}"
+        f"[Pipeline] Summary | dates: {date_range} | states ({len(states)}): {states[:5]}{'...' if len(states) > 5 else ''}"  # noqa: E501
     )
 
     return df_clean

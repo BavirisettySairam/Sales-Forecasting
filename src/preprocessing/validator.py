@@ -1,5 +1,5 @@
 import pandera as pa
-from pandera import Column, DataFrameSchema, Check
+from pandera import Check, Column, DataFrameSchema
 
 # Raw schema: validates after load_raw() has normalised column names to lowercase
 raw_schema = DataFrameSchema(
@@ -32,5 +32,5 @@ def validate_raw(df) -> None:
 
 
 def validate_clean(df) -> None:
-    """Raise SchemaError if the cleaned weekly DataFrame violates the post-clean schema."""
+    """Raise SchemaError if the cleaned weekly DataFrame violates the post-clean schema."""  # noqa: E501
     clean_schema.validate(df, lazy=True)

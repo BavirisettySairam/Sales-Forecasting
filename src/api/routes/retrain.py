@@ -1,8 +1,8 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 
 from src.api.auth import verify_api_key
-from src.api.rate_limiter import RateLimiter
 from src.api.dependencies import get_redis
+from src.api.rate_limiter import RateLimiter
 from src.api.schemas.request import RetrainRequest
 from src.cache.redis_client import redis_client
 from src.utils.logger import logger
@@ -14,10 +14,8 @@ _retrain_limiter = RateLimiter(redis_client=None, max_requests=5, window_seconds
 
 
 def _run_retraining(states: list[str] | None):
-    import yaml
     from src.pipeline.train import run_training
 
-    config = yaml.safe_load(open("config/training_config.yaml"))
     try:
         result = run_training(
             data_path="data/raw/dataset.csv",
@@ -46,5 +44,5 @@ async def trigger_retrain(
     logger.info("Retraining scheduled", states=body.states)
     return success_response(
         data={"scheduled": True, "states": body.states or "all"},
-        message="Retraining started in background. Cache will be invalidated on completion.",
+        message="Retraining started in background. Cache will be invalidated on completion.",  # noqa: E501
     )

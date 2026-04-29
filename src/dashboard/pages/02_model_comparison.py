@@ -34,15 +34,17 @@ if not models:
 records = []
 for m in models:
     metrics = m.get("metrics", {})
-    records.append({
-        "model": m["name"],
-        "state": m.get("state") or "all",
-        "mape": metrics.get("mape", None),
-        "rmse": metrics.get("rmse", None),
-        "mae": metrics.get("mae", None),
-        "is_champion": m.get("is_champion", False),
-        "version": m.get("version", "—"),
-    })
+    records.append(
+        {
+            "model": m["name"],
+            "state": m.get("state") or "all",
+            "mape": metrics.get("mape", None),
+            "rmse": metrics.get("rmse", None),
+            "mae": metrics.get("mae", None),
+            "is_champion": m.get("is_champion", False),
+            "version": m.get("version", "—"),
+        }
+    )
 
 df = pd.DataFrame(records)
 
@@ -63,16 +65,24 @@ if view_df.empty or view_df["mape"].isna().all():
 else:
     view_df_sorted = view_df.dropna(subset=["mape"]).sort_values("mape")
 
-    colors = ["gold" if row["is_champion"] else "#636EFA" for _, row in view_df_sorted.iterrows()]
-    labels = [f"{'👑 ' if row['is_champion'] else ''}{row['model']}" for _, row in view_df_sorted.iterrows()]
+    colors = [
+        "gold" if row["is_champion"] else "#636EFA"
+        for _, row in view_df_sorted.iterrows()
+    ]
+    labels = [
+        f"{'👑 ' if row['is_champion'] else ''}{row['model']}"
+        for _, row in view_df_sorted.iterrows()
+    ]
 
-    fig_bar = go.Figure(go.Bar(
-        x=labels,
-        y=view_df_sorted["mape"].tolist(),
-        marker_color=colors,
-        text=[f"{v:.2f}%" for v in view_df_sorted["mape"].tolist()],
-        textposition="outside",
-    ))
+    fig_bar = go.Figure(
+        go.Bar(
+            x=labels,
+            y=view_df_sorted["mape"].tolist(),
+            marker_color=colors,
+            text=[f"{v:.2f}%" for v in view_df_sorted["mape"].tolist()],
+            textposition="outside",
+        )
+    )
     fig_bar.update_layout(
         title="MAPE by Model (lower is better) — 👑 = Champion",
         yaxis_title="MAPE %",
@@ -88,11 +98,24 @@ table_df.insert(0, "Rank", range(1, len(table_df) + 1))
 table_df["Champion"] = table_df["is_champion"].apply(lambda x: "👑" if x else "")
 display_cols = ["Rank", "Champion", "model", "state", "mape", "rmse", "mae"]
 display_cols = [c for c in display_cols if c in table_df.columns]
-st.dataframe(table_df[display_cols].rename(columns={"model": "Model", "state": "State", "mape": "MAPE %", "rmse": "RMSE", "mae": "MAE"}), use_container_width=True)
+st.dataframe(
+    table_df[display_cols].rename(
+        columns={
+            "model": "Model",
+            "state": "State",
+            "mape": "MAPE %",
+            "rmse": "RMSE",
+            "mae": "MAE",
+        }
+    ),
+    use_container_width=True,
+)
 
 st.subheader("State × Model MAPE Heatmap")
 if len(df["state"].unique()) > 1 and len(df["model"].unique()) > 1:
-    pivot = df.pivot_table(index="state", columns="model", values="mape", aggfunc="first")
+    pivot = df.pivot_table(
+        index="state", columns="model", values="mape", aggfunc="first"
+    )
     fig_heat = px.imshow(
         pivot,
         color_continuous_scale="RdYlGn_r",
@@ -103,4 +126,6 @@ if len(df["state"].unique()) > 1 and len(df["model"].unique()) > 1:
     fig_heat.update_layout(height=max(400, len(pivot) * 20))
     st.plotly_chart(fig_heat, use_container_width=True)
 else:
-    st.info("Heatmap requires models trained for multiple states and multiple model types.")
+    st.info(
+        "Heatmap requires models trained for multiple states and multiple model types."
+    )

@@ -38,27 +38,41 @@ class SARIMAForecaster(BaseForecaster):
             )
 
         self.is_fitted = True
-        logger.info("SARIMA fitted", order=str(self.model.order), seasonal=str(self.model.seasonal_order))
+        logger.info(
+            "SARIMA fitted",
+            order=str(self.model.order),
+            seasonal=str(self.model.seasonal_order),
+        )
 
     def predict(self, horizon: int) -> pd.DataFrame:
         if not self.is_fitted:
             raise RuntimeError("Model not fitted")
 
         alpha = self.config.get("sarima", {}).get("alpha", 0.05)
-        fc, ci = self.model.predict(n_periods=horizon, return_conf_int=True, alpha=alpha)
+        fc, ci = self.model.predict(
+            n_periods=horizon, return_conf_int=True, alpha=alpha
+        )
 
         if isinstance(self._train_series.index, pd.DatetimeIndex):
             last_date = self._train_series.index[-1]
-            dates = pd.date_range(start=last_date + pd.offsets.Week(weekday=0), periods=horizon, freq="W-MON")
+            dates = pd.date_range(
+                start=last_date + pd.offsets.Week(weekday=0),
+                periods=horizon,
+                freq="W-MON",
+            )
         else:
-            dates = pd.date_range(start=pd.Timestamp("today"), periods=horizon, freq="W-MON")
+            dates = pd.date_range(
+                start=pd.Timestamp("today"), periods=horizon, freq="W-MON"
+            )
 
-        return pd.DataFrame({
-            "date": dates,
-            "predicted_value": np.maximum(fc, 0),
-            "lower_bound": np.maximum(ci[:, 0], 0),
-            "upper_bound": np.maximum(ci[:, 1], 0),
-        })
+        return pd.DataFrame(
+            {
+                "date": dates,
+                "predicted_value": np.maximum(fc, 0),
+                "lower_bound": np.maximum(ci[:, 0], 0),
+                "upper_bound": np.maximum(ci[:, 1], 0),
+            }
+        )
 
     def save(self, path: str) -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)

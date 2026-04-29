@@ -33,17 +33,19 @@ if not models:
 records = []
 for m in models:
     metrics = m.get("metrics", {})
-    records.append({
-        "Model": m["name"],
-        "State": m.get("state") or "all",
-        "Version": m.get("version", "—"),
-        "MAPE %": round(metrics.get("mape", 0), 2),
-        "RMSE": round(metrics.get("rmse", 0), 2),
-        "MAE": round(metrics.get("mae", 0), 2),
-        "CV Folds": metrics.get("n_folds", "—"),
-        "Champion": "👑" if m.get("is_champion") else "",
-        "Path": m.get("path", "—"),
-    })
+    records.append(
+        {
+            "Model": m["name"],
+            "State": m.get("state") or "all",
+            "Version": m.get("version", "—"),
+            "MAPE %": round(metrics.get("mape", 0), 2),
+            "RMSE": round(metrics.get("rmse", 0), 2),
+            "MAE": round(metrics.get("mae", 0), 2),
+            "CV Folds": metrics.get("n_folds", "—"),
+            "Champion": "👑" if m.get("is_champion") else "",
+            "Path": m.get("path", "—"),
+        }
+    )
 
 df = pd.DataFrame(records)
 
@@ -84,7 +86,11 @@ if len(df) > 1 and df["MAPE %"].notna().any():
         st.plotly_chart(fig, use_container_width=True)
 
 with st.expander("View model file paths"):
-    st.dataframe(df[["Model", "State", "Version", "Path"]], use_container_width=True, hide_index=True)
+    st.dataframe(
+        df[["Model", "State", "Version", "Path"]],
+        use_container_width=True,
+        hide_index=True,
+    )
 
 st.subheader("Trigger Retraining")
 with st.form("retrain_form"):
@@ -96,7 +102,9 @@ if submitted:
     try:
         r = httpx.post(f"{API_BASE}/retrain", headers=HEADERS, json=payload, timeout=10)
         if r.status_code == 200:
-            st.success("Retraining started in background. Refresh this page in a few minutes.")
+            st.success(
+                "Retraining started in background. Refresh this page in a few minutes."
+            )
         else:
             st.error(f"Retrain failed: {r.json().get('message', r.status_code)}")
     except Exception as e:

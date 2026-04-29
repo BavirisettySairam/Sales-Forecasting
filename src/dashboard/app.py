@@ -19,7 +19,9 @@ st.title("📈 Sales Forecasting System")
 st.markdown("Production-ready time series forecasting with automatic model selection")
 
 st.sidebar.header("Navigation")
-st.sidebar.info("Use the pages in the sidebar to explore forecasts, model comparisons, training history, and API health.")
+st.sidebar.info(
+    "Use the pages in the sidebar to explore forecasts, model comparisons, training history, and API health."  # noqa: E501
+)
 
 
 @st.cache_data(ttl=300)
@@ -51,7 +53,11 @@ col1, col2, col3, col4 = st.columns(4)
 
 champion_count = len([m for m in models if m.get("is_champion")])
 total_models = len(models)
-mape_values = [m["metrics"]["mape"] for m in models if m.get("metrics", {}).get("mape", float("inf")) < float("inf")]
+mape_values = [
+    m["metrics"]["mape"]
+    for m in models
+    if m.get("metrics", {}).get("mape", float("inf")) < float("inf")
+]
 avg_mape = round(sum(mape_values) / len(mape_values), 2) if mape_values else None
 
 with col1:

@@ -38,7 +38,9 @@ def save_model(
         "is_champion": is_champion,
         "state": state,
     }
-    reg["models"] = [m for m in reg["models"] if not (m["name"] == name and m["version"] == version)]
+    reg["models"] = [
+        m for m in reg["models"] if not (m["name"] == name and m["version"] == version)
+    ]
     reg["models"].append(entry)
 
     if is_champion:

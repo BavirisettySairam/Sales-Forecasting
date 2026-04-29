@@ -1,4 +1,5 @@
 """Training orchestrator — run as a script or import run_training()."""
+
 from __future__ import annotations
 
 import argparse
@@ -7,7 +8,6 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-import pandas as pd
 import yaml
 
 from src.pipeline.evaluate import time_series_cv
@@ -21,11 +21,11 @@ MODEL_REGISTRY: dict[str, type] = {}
 
 def _register_models():
     global MODEL_REGISTRY
-    from src.models.sarima_model import SARIMAForecaster
-    from src.models.prophet_model import ProphetForecaster
-    from src.models.xgboost_model import XGBoostForecaster
     from src.models.lightgbm_model import LightGBMForecaster
     from src.models.lstm_model import LSTMForecaster
+    from src.models.prophet_model import ProphetForecaster
+    from src.models.sarima_model import SARIMAForecaster
+    from src.models.xgboost_model import XGBoostForecaster
 
     MODEL_REGISTRY = {
         "sarima": SARIMAForecaster,
@@ -83,7 +83,12 @@ def run_training(
 
         try:
             if skip_cv:
-                cv_results[model_name] = {"mape": 0.0, "rmse": 0.0, "mae": 0.0, "n_folds": 0}
+                cv_results[model_name] = {
+                    "mape": 0.0,
+                    "rmse": 0.0,
+                    "mae": 0.0,
+                    "n_folds": 0,
+                }
             else:
                 cv_results[model_name] = time_series_cv(
                     model_cls=model_cls,
@@ -102,12 +107,19 @@ def run_training(
 
         except Exception as exc:
             logger.error("Model training failed", model=model_name, error=str(exc))
-            cv_results[model_name] = {"mape": float("inf"), "rmse": float("inf"), "mae": float("inf"), "n_folds": 0}
+            cv_results[model_name] = {
+                "mape": float("inf"),
+                "rmse": float("inf"),
+                "mae": float("inf"),
+                "n_folds": 0,
+            }
 
     if not fitted_models:
         raise RuntimeError("All models failed to train")
 
-    champion_name = select_best_model({k: v for k, v in cv_results.items() if k in fitted_models})
+    champion_name = select_best_model(
+        {k: v for k, v in cv_results.items() if k in fitted_models}
+    )
     rankings = rank_models({k: v for k, v in cv_results.items() if k in fitted_models})
 
     # Save all fitted models and register them
@@ -148,12 +160,16 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train forecasting models")
     parser.add_argument("--data", required=True, help="Path to raw CSV data")
     parser.add_argument("--config", default="config/training_config.yaml")
-    parser.add_argument("--models", nargs="+", help="Model names to train (default: all)")
+    parser.add_argument(
+        "--models", nargs="+", help="Model names to train (default: all)"
+    )
     parser.add_argument("--state", default=None, help="Filter to a single state")
     parser.add_argument("--output-dir", default="models")
     parser.add_argument("--horizon", type=int, default=12)
     parser.add_argument("--cv-splits", type=int, default=5)
-    parser.add_argument("--skip-cv", action="store_true", help="Skip cross-validation (faster)")
+    parser.add_argument(
+        "--skip-cv", action="store_true", help="Skip cross-validation (faster)"
+    )
     return parser.parse_args(argv)
 
 
@@ -171,5 +187,7 @@ if __name__ == "__main__":
     )
     print(f"\nChampion: {result['champion']} (version {result['version']})")
     for r in result["rankings"]:
-        print(f"  #{r['rank']} {r['model']}: MAPE={r['mape']:.2f}% RMSE={r['rmse']:.2f}")
+        print(
+            f"  #{r['rank']} {r['model']}: MAPE={r['mape']:.2f}% RMSE={r['rmse']:.2f}"
+        )
     sys.exit(0)

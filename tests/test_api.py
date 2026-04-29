@@ -1,13 +1,9 @@
 """Tests for FastAPI routes — health, forecast, models, response structure."""
-import json
-from unittest.mock import patch
 
-import pytest
-
-from tests.conftest import AUTH, VALID_KEY
-
+from tests.conftest import AUTH
 
 # ── Health endpoint ───────────────────────────────────────────────────────
+
 
 def test_health_returns_200(api_client):
     resp = api_client.get("/health")
@@ -38,6 +34,7 @@ def test_health_has_timestamp_and_request_id(api_client):
 
 # ── Models endpoint ───────────────────────────────────────────────────────
 
+
 def test_get_models_requires_auth(api_client):
     resp = api_client.get("/models")
     assert resp.status_code == 401
@@ -63,6 +60,7 @@ def test_get_models_for_state_with_valid_key(api_client):
 
 
 # ── Forecast endpoint ─────────────────────────────────────────────────────
+
 
 def test_forecast_requires_auth(api_client):
     resp = api_client.post("/forecast", json={"state": "California", "weeks": 4})
@@ -113,6 +111,7 @@ def test_forecast_with_no_trained_model_returns_503(api_client):
 
 # ── CORS headers ──────────────────────────────────────────────────────────
 
+
 def test_cors_headers_present_on_health(api_client):
     resp = api_client.get(
         "/health",
@@ -124,6 +123,7 @@ def test_cors_headers_present_on_health(api_client):
 
 # ── Standard response envelope ────────────────────────────────────────────
 
+
 def test_response_envelope_has_required_fields(api_client):
     resp = api_client.get("/health")
     body = resp.json()
@@ -133,6 +133,7 @@ def test_response_envelope_has_required_fields(api_client):
 
 # ── Error response structure ──────────────────────────────────────────────
 
+
 def test_401_error_response_structure(api_client):
     resp = api_client.get("/models")
     body = resp.json()
@@ -140,6 +141,7 @@ def test_401_error_response_structure(api_client):
 
 
 # ── GET /forecast/{state} ─────────────────────────────────────────────────
+
 
 def test_get_forecast_by_state_requires_auth(api_client):
     resp = api_client.get("/forecast/California")

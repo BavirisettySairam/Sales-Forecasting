@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, Column, DateTime, Float, Integer, JSON, String, Text
+
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -15,7 +16,7 @@ class TrainingRun(Base):
     avg_mape = Column(Float)
     avg_rmse = Column(Float)
     avg_mae = Column(Float)
-    fold_metrics = Column(JSON)          # list[dict] — per-fold MAPE/RMSE/MAE
+    fold_metrics = Column(JSON)  # list[dict] — per-fold MAPE/RMSE/MAE
     hyperparameters = Column(JSON)
     model_path = Column(Text)
     is_champion = Column(Boolean, default=False)

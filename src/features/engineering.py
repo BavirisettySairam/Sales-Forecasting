@@ -5,15 +5,15 @@ All features are created PER STATE — never leaking across state boundaries.
 Lag and rolling features use only past data (shift(n) / rolling(n).shift(1)).
 """
 
+import holidays as hol
 import numpy as np
 import pandas as pd
-import holidays as hol
 from loguru import logger
-
 
 # ---------------------------------------------------------------------------
 # Individual feature groups
 # ---------------------------------------------------------------------------
+
 
 def _add_lag_features(grp: pd.DataFrame, lag_periods: list[int]) -> pd.DataFrame:
     """Lag the target column by n weeks. lag_1 at row t = total at row t-1."""
@@ -49,7 +49,7 @@ def _add_calendar_features(grp: pd.DataFrame) -> pd.DataFrame:
     grp["month"] = dt.dt.month
     grp["quarter"] = dt.dt.quarter
     grp["year"] = dt.dt.year
-    grp["dayofweek"] = dt.dt.dayofweek          # 0=Mon … 6=Sun
+    grp["dayofweek"] = dt.dt.dayofweek  # 0=Mon … 6=Sun
     grp["is_month_start"] = dt.dt.is_month_start.astype(int)
     grp["is_month_end"] = dt.dt.is_month_end.astype(int)
     return grp
@@ -87,6 +87,7 @@ def _add_trend_feature(grp: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def create_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     """
@@ -126,7 +127,7 @@ def create_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     out = pd.concat(result_groups, ignore_index=True)
     out = out.sort_values(["state", "date"]).reset_index(drop=True)
 
-    n_features = len(out.columns) - 4   # exclude state, date, total, category
+    n_features = len(out.columns) - 4  # exclude state, date, total, category
     n_nan_rows = out[out.isnull().any(axis=1)].shape[0]
     logger.info(
         f"[Features] Done | {n_features} features added | "
@@ -137,7 +138,7 @@ def create_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
 
 
 def get_feature_columns(df: pd.DataFrame) -> list[str]:
-    """Return the list of engineered feature column names (excludes state, date, total, category)."""
+    """Return the list of engineered feature column names (excludes state, date, total, category)."""  # noqa: E501
     exclude = {"state", "date", "total", "category"}
     return [c for c in df.columns if c not in exclude]
 

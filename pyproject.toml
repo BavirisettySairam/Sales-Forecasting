@@ -47,6 +47,15 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
+extend-ignore = [
+    "N802",  # ML convention: _build_Xy, uppercase method names
+    "N803",  # ML convention: X argument for feature matrix
+    "N806",  # ML convention: X, X_t variables for feature/tensor matrices
+    "N818",  # Exception names use descriptive *Exception suffix by design
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/dashboard/pages/*.py" = ["N999"]  # Streamlit numbered page filenames
 
 [tool.black]
 line-length = 88

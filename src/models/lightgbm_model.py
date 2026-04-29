@@ -6,8 +6,8 @@ import numpy as np
 import optuna
 import pandas as pd
 
-from src.models.base import BaseForecaster
 from src.features.engineering import get_feature_columns
+from src.models.base import BaseForecaster
 from src.utils.logger import logger
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -36,6 +36,7 @@ class LightGBMForecaster(BaseForecaster):
 
     def _build_Xy(self, data: pd.DataFrame, target_col: str):
         from src.features.engineering import create_features
+
         df = self._ensure_feature_columns(data)
         featured = create_features(df, self.config)
         self._feature_cols = get_feature_columns(featured)
@@ -54,10 +55,15 @@ class LightGBMForecaster(BaseForecaster):
             "reg_lambda": trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
             "num_leaves": trial.suggest_int("num_leaves", 20, 100),
         }
+        from sklearn.metrics import make_scorer, mean_absolute_percentage_error
         from sklearn.model_selection import cross_val_score
-        from sklearn.metrics import mean_absolute_percentage_error, make_scorer
-        model = lgb.LGBMRegressor(**params, objective="regression", random_state=42, verbose=-1)
-        scores = cross_val_score(model, X, y, cv=3, scoring=make_scorer(mean_absolute_percentage_error))
+
+        model = lgb.LGBMRegressor(
+            **params, objective="regression", random_state=42, verbose=-1
+        )
+        scores = cross_val_score(
+            model, X, y, cv=3, scoring=make_scorer(mean_absolute_percentage_error)
+        )
         return scores.mean()
 
     def fit(self, train_data: pd.DataFrame, target_col: str = "total") -> None:
@@ -67,25 +73,39 @@ class LightGBMForecaster(BaseForecaster):
         X, y = self._build_Xy(train_data, target_col)
         self._last_known = train_data.copy()
 
-        study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=42))
-        study.optimize(lambda t: self._objective(t, X, y), n_trials=n_trials, show_progress_bar=False)
+        study = optuna.create_study(
+            direction="minimize", sampler=optuna.samplers.TPESampler(seed=42)
+        )
+        study.optimize(
+            lambda t: self._objective(t, X, y),
+            n_trials=n_trials,
+            show_progress_bar=False,
+        )
 
         best = study.best_params
         logger.info("LightGBM Optuna done", best_mape=study.best_value, params=best)
 
         alpha = cfg.get("quantile_alpha", 0.95)
-        self.model = lgb.LGBMRegressor(**best, objective="regression", random_state=42, verbose=-1)
+        self.model = lgb.LGBMRegressor(
+            **best, objective="regression", random_state=42, verbose=-1
+        )
         self.model.fit(X, y)
 
-        self._model_lower = lgb.LGBMRegressor(**best, objective="quantile", alpha=1 - alpha, random_state=42, verbose=-1)
+        self._model_lower = lgb.LGBMRegressor(
+            **best, objective="quantile", alpha=1 - alpha, random_state=42, verbose=-1
+        )
         self._model_lower.fit(X, y)
 
-        self._model_upper = lgb.LGBMRegressor(**best, objective="quantile", alpha=alpha, random_state=42, verbose=-1)
+        self._model_upper = lgb.LGBMRegressor(
+            **best, objective="quantile", alpha=alpha, random_state=42, verbose=-1
+        )
         self._model_upper.fit(X, y)
 
         self.is_fitted = True
 
-    def _recursive_predict(self, horizon: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _recursive_predict(
+        self, horizon: int
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         from src.features.engineering import create_features
 
         history = self._ensure_feature_columns(self._last_known)
@@ -102,12 +122,14 @@ class LightGBMForecaster(BaseForecaster):
             uppers.append(max(hi, 0))
 
             next_date = history["date"].iloc[-1] + pd.offsets.Week(weekday=0)
-            new_row = pd.DataFrame({
-                "date": [next_date],
-                "total": [p],
-                "state": history["state"].iloc[-1],
-                "category": history["category"].iloc[-1],
-            })
+            new_row = pd.DataFrame(
+                {
+                    "date": [next_date],
+                    "total": [p],
+                    "state": history["state"].iloc[-1],
+                    "category": history["category"].iloc[-1],
+                }
+            )
             history = pd.concat([history, new_row], ignore_index=True)
 
         return np.array(preds), np.array(lowers), np.array(uppers)
@@ -121,25 +143,32 @@ class LightGBMForecaster(BaseForecaster):
         else:
             last_date = self._last_known["date"].iloc[-1]
 
-        dates = pd.date_range(start=last_date + pd.offsets.Week(weekday=0), periods=horizon, freq="W-MON")
+        dates = pd.date_range(
+            start=last_date + pd.offsets.Week(weekday=0), periods=horizon, freq="W-MON"
+        )
         preds, lowers, uppers = self._recursive_predict(horizon)
 
-        return pd.DataFrame({
-            "date": dates,
-            "predicted_value": preds,
-            "lower_bound": lowers,
-            "upper_bound": uppers,
-        })
+        return pd.DataFrame(
+            {
+                "date": dates,
+                "predicted_value": preds,
+                "lower_bound": lowers,
+                "upper_bound": uppers,
+            }
+        )
 
     def save(self, path: str) -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump({
-            "model": self.model,
-            "model_lower": self._model_lower,
-            "model_upper": self._model_upper,
-            "feature_cols": self._feature_cols,
-            "last_known": self._last_known,
-        }, path)
+        joblib.dump(
+            {
+                "model": self.model,
+                "model_lower": self._model_lower,
+                "model_upper": self._model_upper,
+                "feature_cols": self._feature_cols,
+                "last_known": self._last_known,
+            },
+            path,
+        )
         logger.info("LightGBM saved", path=path)
 
     def load(self, path: str) -> None:

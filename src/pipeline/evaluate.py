@@ -8,7 +8,11 @@ from src.utils.logger import logger
 
 def calculate_metrics(actual: np.ndarray, predicted: np.ndarray) -> dict[str, float]:
     mask = actual != 0
-    mape = float(np.mean(np.abs((actual[mask] - predicted[mask]) / actual[mask])) * 100) if mask.any() else float("inf")
+    mape = (
+        float(np.mean(np.abs((actual[mask] - predicted[mask]) / actual[mask])) * 100)
+        if mask.any()
+        else float("inf")
+    )
     rmse = float(np.sqrt(np.mean((actual - predicted) ** 2)))
     mae = float(np.mean(np.abs(actual - predicted)))
     return {"mape": round(mape, 4), "rmse": round(rmse, 4), "mae": round(mae, 4)}
@@ -25,7 +29,8 @@ def time_series_cv(
 ) -> dict[str, float]:
     """
     Expanding window cross-validation (no future leakage).
-    Each fold trains on all data up to the split point and evaluates on the next `horizon` weeks.
+    Each fold trains on all data up to the split point and evaluates
+    on the next `horizon` weeks.
     Returns averaged MAPE, RMSE, MAE across folds.
     """
     n = len(data)
@@ -56,7 +61,12 @@ def time_series_cv(
             logger.warning("CV fold failed", fold=fold + 1, error=str(exc))
 
     if not fold_metrics:
-        return {"mape": float("inf"), "rmse": float("inf"), "mae": float("inf"), "n_folds": 0}
+        return {
+            "mape": float("inf"),
+            "rmse": float("inf"),
+            "mae": float("inf"),
+            "n_folds": 0,
+        }
 
     avg = {
         "mape": round(float(np.mean([m["mape"] for m in fold_metrics])), 4),

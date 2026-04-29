@@ -50,7 +50,11 @@ with st.sidebar:
     weeks = st.slider("Forecast horizon (weeks)", min_value=1, max_value=52, value=8)
     run = st.button("Generate Forecast", type="primary", use_container_width=True)
 
-if run or "forecast_data" not in st.session_state or st.session_state.get("forecast_state") != selected_state:
+if (
+    run
+    or "forecast_data" not in st.session_state
+    or st.session_state.get("forecast_state") != selected_state
+):
     result = get_forecast(selected_state, weeks)
     st.session_state["forecast_data"] = result
     st.session_state["forecast_state"] = selected_state
@@ -70,7 +74,9 @@ forecast_list = result.get("forecast", [])
 model_used = result.get("model_used", "unknown")
 model_mape = result.get("model_mape", 0)
 
-st.markdown(f"**Model:** `{model_used}` &nbsp;|&nbsp; **MAPE:** `{model_mape:.2f}%` &nbsp;|&nbsp; **State:** `{result.get('state', selected_state)}`")
+st.markdown(
+    f"**Model:** `{model_used}` &nbsp;|&nbsp; **MAPE:** `{model_mape:.2f}%` &nbsp;|&nbsp; **State:** `{result.get('state', selected_state)}`"  # noqa: E501
+)
 
 fc_df = pd.DataFrame(forecast_list)
 if fc_df.empty:
@@ -81,34 +87,40 @@ fc_df["date"] = pd.to_datetime(fc_df["date"])
 
 fig = go.Figure()
 
-fig.add_trace(go.Scatter(
-    x=fc_df["date"],
-    y=fc_df["upper_bound"],
-    mode="lines",
-    line=dict(width=0),
-    showlegend=False,
-    name="Upper CI",
-))
-fig.add_trace(go.Scatter(
-    x=fc_df["date"],
-    y=fc_df["lower_bound"],
-    mode="lines",
-    fill="tonexty",
-    fillcolor="rgba(99, 110, 250, 0.2)",
-    line=dict(width=0),
-    name="95% CI",
-))
-fig.add_trace(go.Scatter(
-    x=fc_df["date"],
-    y=fc_df["predicted_value"],
-    mode="lines+markers",
-    line=dict(color="#636EFA", dash="dash", width=2),
-    marker=dict(size=6),
-    name="Forecast",
-))
+fig.add_trace(
+    go.Scatter(
+        x=fc_df["date"],
+        y=fc_df["upper_bound"],
+        mode="lines",
+        line=dict(width=0),
+        showlegend=False,
+        name="Upper CI",
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=fc_df["date"],
+        y=fc_df["lower_bound"],
+        mode="lines",
+        fill="tonexty",
+        fillcolor="rgba(99, 110, 250, 0.2)",
+        line=dict(width=0),
+        name="95% CI",
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=fc_df["date"],
+        y=fc_df["predicted_value"],
+        mode="lines+markers",
+        line=dict(color="#636EFA", dash="dash", width=2),
+        marker=dict(size=6),
+        name="Forecast",
+    )
+)
 
 fig.update_layout(
-    title=f"{result.get('state', selected_state)} — {weeks}-Week Sales Forecast ({model_used})",
+    title=f"{result.get('state', selected_state)} — {weeks}-Week Sales Forecast ({model_used})",  # noqa: E501
     xaxis_title="Date",
     yaxis_title="Total Sales",
     hovermode="x unified",
@@ -121,10 +133,12 @@ st.plotly_chart(fig, use_container_width=True)
 st.subheader("Forecast Table")
 display_df = fc_df.copy()
 display_df["date"] = display_df["date"].dt.strftime("%Y-%m-%d")
-display_df = display_df.rename(columns={
-    "date": "Date",
-    "predicted_value": "Predicted",
-    "lower_bound": "Lower (95%)",
-    "upper_bound": "Upper (95%)",
-})
+display_df = display_df.rename(
+    columns={
+        "date": "Date",
+        "predicted_value": "Predicted",
+        "lower_bound": "Lower (95%)",
+        "upper_bound": "Upper (95%)",
+    }
+)
 st.dataframe(display_df.set_index("Date"), use_container_width=True)

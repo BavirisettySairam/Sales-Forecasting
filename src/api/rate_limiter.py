@@ -1,17 +1,21 @@
 import time
 
-from fastapi import Request, HTTPException
+from fastapi import HTTPException, Request
 from redis import Redis
 
 
 class RateLimiter:
-    def __init__(self, redis_client: Redis, max_requests: int = 100, window_seconds: int = 60):
+    def __init__(
+        self, redis_client: Redis, max_requests: int = 100, window_seconds: int = 60
+    ):
         self.redis = redis_client
         self.max_requests = max_requests
         self.window = window_seconds
 
     async def check(self, request: Request) -> dict:
-        client_id = request.headers.get("X-API-Key") or (request.client.host if request.client else "unknown")
+        client_id = request.headers.get("X-API-Key") or (
+            request.client.host if request.client else "unknown"
+        )
         key = f"rate_limit:{client_id}"
 
         now = int(time.time())
@@ -31,7 +35,7 @@ class RateLimiter:
         if count > self.max_requests:
             raise HTTPException(
                 status_code=429,
-                detail=f"Rate limit exceeded. Max {self.max_requests} requests per {self.window}s.",
+                detail=f"Rate limit exceeded. Max {self.max_requests} requests per {self.window}s.",  # noqa: E501
                 headers={
                     "X-RateLimit-Limit": str(self.max_requests),
                     "X-RateLimit-Remaining": "0",

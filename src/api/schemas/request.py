@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class ForecastRequest(BaseModel):
@@ -8,4 +9,6 @@ class ForecastRequest(BaseModel):
 
 
 class RetrainRequest(BaseModel):
-    states: Optional[list[str]] = Field(default=None, description="States to retrain. None = all states.")
+    states: Optional[list[str]] = Field(
+        default=None, description="States to retrain. None = all states."
+    )

@@ -2,19 +2,18 @@
 Data cleaning pipeline for the sales forecasting dataset.
 
 Raw CSV quirks this module handles:
-  - Total column has comma thousands separators and surrounding whitespace: "  109,574,036 "
+  - Total column has comma-separated thousands and whitespace: "  109,574,036 "
   - Date format is M/D/YYYY (e.g. 1/12/2019), not ISO 8601
   - Multiple categories per state/date combination
 """
 
 import pandas as pd
-import numpy as np
 from loguru import logger
-
 
 # ---------------------------------------------------------------------------
 # Step 1: Load & normalise columns
 # ---------------------------------------------------------------------------
+
 
 def load_raw(path: str) -> pd.DataFrame:
     """Read the CSV and return a DataFrame with normalised column names + types."""
@@ -37,12 +36,14 @@ def load_raw(path: str) -> pd.DataFrame:
     df["Date"] = pd.to_datetime(df["Date"], format="mixed", dayfirst=False)
 
     # Lowercase column names for internal consistency
-    df = df.rename(columns={
-        "State": "state",
-        "Date": "date",
-        "Total": "total",
-        "Category": "category",
-    })
+    df = df.rename(
+        columns={
+            "State": "state",
+            "Date": "date",
+            "Total": "total",
+            "Category": "category",
+        }
+    )
 
     # Strip whitespace in string columns
     df["state"] = df["state"].str.strip()
@@ -54,6 +55,7 @@ def load_raw(path: str) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Step 2: Remove exact duplicates
 # ---------------------------------------------------------------------------
+
 
 def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     before = len(df)
@@ -68,13 +70,11 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
 # Step 3: Aggregate duplicate (state, date, category) combinations
 # ---------------------------------------------------------------------------
 
+
 def aggregate_duplicate_dates(df: pd.DataFrame) -> pd.DataFrame:
     """Sum Total for rows sharing the same state + date + category."""
     before = len(df)
-    df = (
-        df.groupby(["state", "date", "category"], as_index=False)
-        .agg({"total": "sum"})
-    )
+    df = df.groupby(["state", "date", "category"], as_index=False).agg({"total": "sum"})
     dropped = before - len(df)
     if dropped:
         logger.info(f"Aggregated {dropped} duplicate (state, date, category) rows")
@@ -84,6 +84,7 @@ def aggregate_duplicate_dates(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Step 4: Fill missing dates per state+category
 # ---------------------------------------------------------------------------
+
 
 def fill_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -102,7 +103,9 @@ def fill_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
     result = pd.concat(groups, ignore_index=True)
     gaps = result["total"].isna().sum()
     if gaps:
-        logger.info(f"Identified {gaps} missing date gaps across all state/category groups")
+        logger.info(
+            f"Identified {gaps} missing date gaps across all state/category groups"
+        )
     return result
 
 
@@ -110,14 +113,18 @@ def fill_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
 # Step 5: Impute missing values
 # ---------------------------------------------------------------------------
 
+
 def impute_missing(df: pd.DataFrame, method: str = "interpolate") -> pd.DataFrame:
     """
     Fill missing Total values per (state, category) group.
     method: 'interpolate' (linear), 'ffill', or 'bfill'
     """
+
     def _fill(grp: pd.DataFrame) -> pd.DataFrame:
         if method == "interpolate":
-            grp["total"] = grp["total"].interpolate(method="linear", limit_direction="both")
+            grp["total"] = grp["total"].interpolate(
+                method="linear", limit_direction="both"
+            )
         elif method == "ffill":
             grp["total"] = grp["total"].ffill().bfill()
         elif method == "bfill":
@@ -127,7 +134,9 @@ def impute_missing(df: pd.DataFrame, method: str = "interpolate") -> pd.DataFram
     df = df.groupby(["state", "category"], group_keys=False).apply(_fill)
     remaining_nulls = df["total"].isna().sum()
     if remaining_nulls:
-        logger.warning(f"{remaining_nulls} nulls remain after imputation — filling with 0")
+        logger.warning(
+            f"{remaining_nulls} nulls remain after imputation — filling with 0"
+        )
         df["total"] = df["total"].fillna(0)
     logger.info(f"Missing values imputed using method='{method}'")
     return df
@@ -136,6 +145,7 @@ def impute_missing(df: pd.DataFrame, method: str = "interpolate") -> pd.DataFram
 # ---------------------------------------------------------------------------
 # Step 6: Outlier detection (IQR) — flag and cap, never silently drop
 # ---------------------------------------------------------------------------
+
 
 def handle_outliers(
     df: pd.DataFrame,
@@ -165,13 +175,16 @@ def handle_outliers(
         # Cap extreme values at the fences
         df.loc[idx, "total"] = grp_total.clip(lower=max(0, lower), upper=upper)
 
-    logger.info(f"Outlier detection ({method}, threshold={threshold}): {total_flagged} values flagged and capped")
+    logger.info(
+        f"Outlier detection ({method}, threshold={threshold}): {total_flagged} values flagged and capped"  # noqa: E501
+    )
     return df
 
 
 # ---------------------------------------------------------------------------
 # Step 7: Aggregate to weekly (Monday-anchored, sum of Total)
 # ---------------------------------------------------------------------------
+
 
 def aggregate_to_weekly(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -194,13 +207,16 @@ def aggregate_to_weekly(df: pd.DataFrame) -> pd.DataFrame:
 
     result = pd.concat(weekly_groups, ignore_index=True)
     result = result[["state", "date", "total", "category"]]
-    logger.info(f"Weekly aggregation complete: {len(result)} rows across {result['state'].nunique()} states")
+    logger.info(
+        f"Weekly aggregation complete: {len(result)} rows across {result['state'].nunique()} states"  # noqa: E501
+    )
     return result
 
 
 # ---------------------------------------------------------------------------
 # Step 8: Sort
 # ---------------------------------------------------------------------------
+
 
 def sort_data(df: pd.DataFrame) -> pd.DataFrame:
     return df.sort_values(["state", "date"]).reset_index(drop=True)
@@ -209,6 +225,7 @@ def sort_data(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Public entry point used by pipeline.py
 # ---------------------------------------------------------------------------
+
 
 def clean(
     df: pd.DataFrame,
