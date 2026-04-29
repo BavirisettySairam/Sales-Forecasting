@@ -106,7 +106,7 @@ def run_training(
             logger.info("Model fitted", model=model_name)
 
         except Exception as exc:
-            logger.error("Model training failed", model=model_name, error=str(exc))
+            logger.exception("Model training failed", model=model_name, error=str(exc))
             cv_results[model_name] = {
                 "mape": float("inf"),
                 "rmse": float("inf"),
@@ -164,6 +164,11 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--models", nargs="+", help="Model names to train (default: all)"
     )
     parser.add_argument("--state", default=None, help="Filter to a single state")
+    parser.add_argument(
+        "--all-states",
+        action="store_true",
+        help="Train a separate champion model for every state in the dataset",
+    )
     parser.add_argument("--output-dir", default="models")
     parser.add_argument("--horizon", type=int, default=12)
     parser.add_argument("--cv-splits", type=int, default=5)
@@ -175,19 +180,45 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = _parse_args()
-    result = run_training(
-        data_path=args.data,
-        config_path=args.config,
-        models_to_run=args.models,
-        state_filter=args.state,
-        output_dir=args.output_dir,
-        horizon=args.horizon,
-        cv_splits=args.cv_splits,
-        skip_cv=args.skip_cv,
-    )
-    print(f"\nChampion: {result['champion']} (version {result['version']})")
-    for r in result["rankings"]:
-        print(
-            f"  #{r['rank']} {r['model']}: MAPE={r['mape']:.2f}% RMSE={r['rmse']:.2f}"
+
+    if args.all_states:
+        # Discover states from the dataset then train one champion per state
+        import pandas as pd
+
+        raw = pd.read_csv(args.data)
+        states = sorted(raw.iloc[:, 0].str.strip().unique().tolist())
+        logger.info("Per-state training", total_states=len(states))
+        for i, state in enumerate(states, 1):
+            logger.info(f"Training state {i}/{len(states)}", state=state)
+            try:
+                result = run_training(
+                    data_path=args.data,
+                    config_path=args.config,
+                    models_to_run=args.models,
+                    state_filter=state,
+                    output_dir=args.output_dir,
+                    horizon=args.horizon,
+                    cv_splits=args.cv_splits,
+                    skip_cv=args.skip_cv,
+                )
+                print(f"[{state}] Champion: {result['champion']}")
+            except Exception as exc:
+                logger.error("State training failed", state=state, error=str(exc))
+        print("\nAll states done.")
+    else:
+        result = run_training(
+            data_path=args.data,
+            config_path=args.config,
+            models_to_run=args.models,
+            state_filter=args.state,
+            output_dir=args.output_dir,
+            horizon=args.horizon,
+            cv_splits=args.cv_splits,
+            skip_cv=args.skip_cv,
         )
+        print(f"\nChampion: {result['champion']} (version {result['version']})")
+        for r in result["rankings"]:
+            print(
+                f"  #{r['rank']} {r['model']}: MAPE={r['mape']:.2f}% RMSE={r['rmse']:.2f}"
+            )
     sys.exit(0)

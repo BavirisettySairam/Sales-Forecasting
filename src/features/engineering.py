@@ -72,7 +72,7 @@ def _add_holiday_features(grp: pd.DataFrame, country: str = "US") -> pd.DataFram
         past = holiday_dates[holiday_dates <= d]
         return int((d - past[-1]).days) if len(past) else 365
 
-    grp["is_holiday"] = grp["date"].isin(us_holidays).astype(int)
+    grp["is_holiday"] = grp["date"].isin(holiday_dates).astype(int)
     grp["days_to_next_holiday"] = grp["date"].apply(_days_to_next)
     grp["days_from_last_holiday"] = grp["date"].apply(_days_from_last)
     return grp

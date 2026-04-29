@@ -40,7 +40,7 @@ class XGBoostForecaster(BaseForecaster):
         df = self._ensure_feature_columns(data)
         featured = create_features(df, self.config)
         self._feature_cols = get_feature_columns(featured)
-        X = featured[self._feature_cols].values
+        X = featured[self._feature_cols]  # keep DataFrame so feature names are consistent
         y = featured[target_col].values
         return X, y
 
