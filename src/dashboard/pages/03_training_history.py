@@ -47,15 +47,17 @@ if not models:
 records = []
 for m in models:
     metrics = m.get("metrics") or {}
+    test_mape = metrics.get("test_mape")
     records.append(
         {
             "Model": m["name"],
             "State": m.get("state") or "National",
             "Version": m.get("version", "—"),
-            "MAPE %": round(metrics.get("mape", 0), 2),
+            "CV MAPE %": round(metrics.get("mape", 0), 2),
+            "Test MAPE %": round(test_mape, 2) if test_mape is not None else "—",
             "RMSE": _fmt_large(metrics.get("rmse")),
             "MAE": _fmt_large(metrics.get("mae")),
-            "CV Folds": metrics.get("n_folds", "—"),
+            "CV Folds": metrics.get("n_folds", 0),
             "Champion": "👑" if m.get("is_champion") else "",
             "Path": m.get("path", "—"),
         }
@@ -69,6 +71,9 @@ with st.sidebar:
     selected_state = st.selectbox("State", state_options)
     model_options = ["All"] + sorted(df["Model"].unique().tolist())
     selected_model = st.selectbox("Model", model_options)
+    if st.button("Refresh Data", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
 
 filtered = df.copy()
 if selected_state != "All":
@@ -78,23 +83,23 @@ if selected_model != "All":
 
 st.subheader(f"Training Runs ({len(filtered)} results)")
 st.dataframe(
-    filtered.drop(columns=["Path"]).sort_values("MAPE %"),
+    filtered.drop(columns=["Path"]).sort_values("CV MAPE %"),
     use_container_width=True,
     hide_index=True,
 )
 
-if len(df) > 1 and df["MAPE %"].notna().any():
+if len(df) > 1 and df["CV MAPE %"].notna().any():
     st.subheader("MAPE by Model and State")
-    chart_df = df[df["MAPE %"] > 0].copy()
+    chart_df = df[df["CV MAPE %"] > 0].copy()
     if not chart_df.empty:
         fig = px.bar(
-            chart_df.sort_values("MAPE %"),
+            chart_df.sort_values("CV MAPE %"),
             x="Model",
-            y="MAPE %",
+            y="CV MAPE %",
             color="State",
             barmode="group",
-            title="Cross-Validation MAPE by Model",
-            labels={"MAPE %": "Avg MAPE (%)"},
+            title="Cross-Validation MAPE by Model (lower is better)",
+            labels={"CV MAPE %": "CV MAPE (%)"},
         )
         fig.update_layout(height=400)
         st.plotly_chart(fig, use_container_width=True)

@@ -10,7 +10,9 @@ from pathlib import Path
 
 import yaml
 
-from src.pipeline.evaluate import time_series_cv
+import pandas as pd
+
+from src.pipeline.evaluate import calculate_metrics, time_series_cv, train_val_test_split
 from src.pipeline.registry import save_model
 from src.pipeline.select import rank_models, select_best_model
 from src.preprocessing.pipeline import run as run_pipeline
@@ -66,8 +68,16 @@ def run_training(
         clean_df = clean_df[clean_df["state"] == state_filter]
         logger.info("State filter applied", state=state_filter, rows=len(clean_df))
 
-    if len(clean_df) < 52:
-        raise ValueError(f"Insufficient data after filtering: {len(clean_df)} rows")
+    n_dates = len(clean_df["date"].unique()) if "date" in clean_df.columns else len(clean_df)
+    if n_dates < 52:
+        raise ValueError(f"Insufficient data after filtering: {n_dates} unique dates")
+
+    # ── 6:2:2 chronological split ─────────────────────────────────────────────
+    # train (60%) + val (20%) used for CV and model selection.
+    # test (20%) held out for final honest evaluation — never seen during fitting.
+    # Production model is then re-fitted on ALL data for best forecasting.
+    train_df, val_df, test_df = train_val_test_split(clean_df)
+    dev_df = pd.concat([train_df, val_df]).sort_values("date").reset_index(drop=True)
 
     target_models = models_to_run or list(MODEL_REGISTRY.keys())
     cv_results: dict[str, dict] = {}
@@ -82,28 +92,54 @@ def run_training(
         logger.info("Fitting model", model=model_name)
 
         try:
+            # ── Step 1: CV on train+val (dev set = 80%) ──────────────────────
             if skip_cv:
                 cv_results[model_name] = {
-                    "mape": 0.0,
-                    "rmse": 0.0,
-                    "mae": 0.0,
+                    "mape": float("inf"),
+                    "rmse": float("inf"),
+                    "mae": float("inf"),
                     "n_folds": 0,
                 }
             else:
                 cv_results[model_name] = time_series_cv(
                     model_cls=model_cls,
                     model_config=config,
-                    data=clean_df,
+                    data=dev_df,
                     target_col="total",
                     n_splits=cv_splits,
                     horizon=horizon,
                 )
 
-            # Fit on full data for final model
+            # ── Step 2: Fit on dev set, evaluate on held-out test (20%) ─────
+            dev_forecaster = model_cls(config)
+            dev_forecaster.fit(dev_df, "total")
+
+            if len(test_df) > 0:
+                test_dates = sorted(test_df["date"].unique())
+                test_horizon = len(test_dates)
+                fc_df = dev_forecaster.predict(test_horizon)
+                actual_test = (
+                    test_df.groupby("date")["total"].sum().sort_index().values
+                )
+                n = min(len(actual_test), len(fc_df))
+                test_m = calculate_metrics(
+                    actual_test[:n], fc_df["predicted_value"].values[:n]
+                )
+                cv_results[model_name]["test_mape"] = test_m["mape"]
+                cv_results[model_name]["test_rmse"] = test_m["rmse"]
+                cv_results[model_name]["test_mae"] = test_m["mae"]
+                logger.info(
+                    "Test-set evaluation",
+                    model=model_name,
+                    test_dates=test_horizon,
+                    **test_m,
+                )
+
+            # ── Step 3: Final production model on ALL data ───────────────────
             forecaster = model_cls(config)
             forecaster.fit(clean_df, "total")
             fitted_models[model_name] = forecaster
-            logger.info("Model fitted", model=model_name)
+            logger.info("Production model fitted on full dataset", model=model_name)
 
         except Exception as exc:
             logger.exception("Model training failed", model=model_name, error=str(exc))
@@ -117,10 +153,10 @@ def run_training(
     if not fitted_models:
         raise RuntimeError("All models failed to train")
 
-    champion_name = select_best_model(
-        {k: v for k, v in cv_results.items() if k in fitted_models}
-    )
-    rankings = rank_models({k: v for k, v in cv_results.items() if k in fitted_models})
+    # Select champion by CV MAPE (most robust), break ties with test_mape if available
+    valid_cv = {k: v for k, v in cv_results.items() if k in fitted_models}
+    champion_name = select_best_model(valid_cv)
+    rankings = rank_models(valid_cv)
 
     # Save all fitted models and register them
     out_dir = Path(output_dir)

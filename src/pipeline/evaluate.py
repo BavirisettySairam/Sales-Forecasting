@@ -6,6 +6,41 @@ import pandas as pd
 from src.utils.logger import logger
 
 
+def train_val_test_split(
+    data: pd.DataFrame,
+    train_frac: float = 0.6,
+    val_frac: float = 0.2,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Chronological 6:2:2 split by unique calendar dates (not row index).
+    Returns (train_df, val_df, test_df).
+    Multi-state data is split by date so all states are represented in each fold.
+    """
+    sorted_dates = sorted(data["date"].unique())
+    n = len(sorted_dates)
+
+    train_end = max(1, int(n * train_frac))
+    val_end = max(train_end + 1, int(n * (train_frac + val_frac)))
+    val_end = min(val_end, n - 1)  # ensure at least 1 date in test
+
+    train_cutoff = sorted_dates[train_end - 1]
+    val_cutoff = sorted_dates[val_end - 1]
+
+    train = data[data["date"] <= train_cutoff].copy()
+    val = data[(data["date"] > train_cutoff) & (data["date"] <= val_cutoff)].copy()
+    test = data[data["date"] > val_cutoff].copy()
+
+    logger.info(
+        "6:2:2 split",
+        train_dates=len(data[data["date"] <= train_cutoff]["date"].unique()),
+        val_dates=len(val["date"].unique()),
+        test_dates=len(test["date"].unique()),
+        train_cutoff=str(train_cutoff)[:10],
+        val_cutoff=str(val_cutoff)[:10],
+    )
+    return train, val, test
+
+
 def calculate_metrics(actual: np.ndarray, predicted: np.ndarray) -> dict[str, float]:
     mask = actual != 0
     mape = (

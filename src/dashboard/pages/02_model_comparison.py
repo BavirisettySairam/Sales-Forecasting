@@ -66,6 +66,9 @@ states = sorted(df["state"].unique())
 with st.sidebar:
     st.header("Filters")
     selected_state = st.selectbox("State", ["all states"] + list(states))
+    if st.button("Refresh Data", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
 
 if selected_state != "all states":
     view_df = df[df["state"] == selected_state].copy()

@@ -1,0 +1,74 @@
+{
+  "models": [
+    {
+      "name": "sarima",
+      "version": "20260429_184608",
+      "path": "models\\sarima_20260429_184608",
+      "metrics": {
+        "mape": 5.355,
+        "rmse": 3876621582.7452,
+        "mae": 3376798003.7339,
+        "n_folds": 3
+      },
+      "is_champion": true,
+      "state": null
+    },
+    {
+      "name": "prophet",
+      "version": "20260429_184608",
+      "path": "models\\prophet_20260429_184608",
+      "metrics": {
+        "mape": 6.0719,
+        "rmse": 4648070637.489,
+        "mae": 3847901432.8675,
+        "n_folds": 3
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "xgboost",
+      "version": "20260429_184608",
+      "path": "models\\xgboost_20260429_184608",
+      "metrics": {
+        "mape": 5.3999,
+        "rmse": 3924368601.9955,
+        "mae": 3348644167.0701,
+        "n_folds": 3
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260429_184608",
+      "path": "models\\lightgbm_20260429_184608",
+      "metrics": {
+        "mape": 6.9046,
+        "rmse": 4663931457.9647,
+        "mae": 4272340654.0231,
+        "n_folds": 3
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "lstm",
+      "version": "20260429_184608",
+      "path": "models\\lstm_20260429_184608",
+      "metrics": {
+        "mape": 9.297,
+        "rmse": 6161246424.8665,
+        "mae": 5755012787.7132,
+        "n_folds": 3
+      },
+      "is_champion": false,
+      "state": null
+    }
+  ],
+  "champion": {
+    "name": "sarima",
+    "version": "20260429_184608",
+    "path": "models\\sarima_20260429_184608"
+  }
+}

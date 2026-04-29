@@ -22,6 +22,9 @@ st.sidebar.header("Navigation")
 st.sidebar.info(
     "Use the pages in the sidebar to explore forecasts, model comparisons, training history, and API health."  # noqa: E501
 )
+if st.sidebar.button("Refresh Data", use_container_width=True):
+    st.cache_data.clear()
+    st.rerun()
 
 
 @st.cache_data(ttl=300)
