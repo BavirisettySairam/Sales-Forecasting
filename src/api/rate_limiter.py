@@ -13,6 +13,10 @@ class RateLimiter:
         self.window = window_seconds
 
     async def check(self, request: Request) -> dict:
+        # If Redis is unavailable, fail open — don't block requests
+        if self.redis is None:
+            return {}
+
         client_id = request.headers.get("X-API-Key") or (
             request.client.host if request.client else "unknown"
         )
@@ -21,12 +25,16 @@ class RateLimiter:
         now = int(time.time())
         window_start = now - self.window
 
-        pipe = self.redis.pipeline()
-        pipe.zremrangebyscore(key, 0, window_start)
-        pipe.zadd(key, {str(now): now})
-        pipe.zcard(key)
-        pipe.expire(key, self.window)
-        results = pipe.execute()
+        try:
+            pipe = self.redis.pipeline()
+            pipe.zremrangebyscore(key, 0, window_start)
+            pipe.zadd(key, {str(now): now})
+            pipe.zcard(key)
+            pipe.expire(key, self.window)
+            results = pipe.execute()
+        except Exception:
+            # Redis unavailable — skip rate limiting rather than crashing
+            return {}
 
         count = results[2]
         remaining = max(self.max_requests - count, 0)

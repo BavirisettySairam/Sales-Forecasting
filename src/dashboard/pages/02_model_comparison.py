@@ -25,6 +25,20 @@ def get_all_models():
     return []
 
 
+def _fmt_large(n) -> str:
+    """Format large numbers as 1.23B / 1.23M / 1.23K for readability."""
+    if n is None:
+        return "N/A"
+    n = float(n)
+    if abs(n) >= 1e9:
+        return f"{n / 1e9:.2f}B"
+    if abs(n) >= 1e6:
+        return f"{n / 1e6:.2f}M"
+    if abs(n) >= 1e3:
+        return f"{n / 1e3:.2f}K"
+    return f"{n:.2f}"
+
+
 models = get_all_models()
 
 if not models:
@@ -33,11 +47,11 @@ if not models:
 
 records = []
 for m in models:
-    metrics = m.get("metrics", {})
+    metrics = m.get("metrics") or {}
     records.append(
         {
             "model": m["name"],
-            "state": m.get("state") or "all",
+            "state": m.get("state") or "National",
             "mape": metrics.get("mape", None),
             "rmse": metrics.get("rmse", None),
             "mae": metrics.get("mae", None),
@@ -96,20 +110,12 @@ st.subheader("Ranked Model Table")
 table_df = view_df.dropna(subset=["mape"]).sort_values("mape").reset_index(drop=True)
 table_df.insert(0, "Rank", range(1, len(table_df) + 1))
 table_df["Champion"] = table_df["is_champion"].apply(lambda x: "👑" if x else "")
-display_cols = ["Rank", "Champion", "model", "state", "mape", "rmse", "mae"]
-display_cols = [c for c in display_cols if c in table_df.columns]
-st.dataframe(
-    table_df[display_cols].rename(
-        columns={
-            "model": "Model",
-            "state": "State",
-            "mape": "MAPE %",
-            "rmse": "RMSE",
-            "mae": "MAE",
-        }
-    ),
-    use_container_width=True,
-)
+display_df = table_df[["Rank", "Champion", "model", "state", "mape", "rmse", "mae", "version"]].copy()
+display_df = display_df.rename(columns={"model": "Model", "state": "State", "mape": "MAPE %", "version": "Version"})
+display_df["RMSE"] = display_df["rmse"].apply(_fmt_large)
+display_df["MAE"] = display_df["mae"].apply(_fmt_large)
+display_df = display_df.drop(columns=["rmse", "mae"])
+st.dataframe(display_df, use_container_width=True)
 
 st.subheader("State × Model MAPE Heatmap")
 if len(df["state"].unique()) > 1 and len(df["model"].unique()) > 1:

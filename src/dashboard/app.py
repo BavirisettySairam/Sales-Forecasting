@@ -49,15 +49,30 @@ def fetch_health():
 models = fetch_models()
 health = fetch_health()
 
+
+def _fmt_large(n) -> str:
+    """Format large numbers as 1.23B / 1.23M / 1.23K for readability."""
+    if n is None:
+        return "N/A"
+    n = float(n)
+    if abs(n) >= 1e9:
+        return f"{n / 1e9:.2f}B"
+    if abs(n) >= 1e6:
+        return f"{n / 1e6:.2f}M"
+    if abs(n) >= 1e3:
+        return f"{n / 1e3:.2f}K"
+    return f"{n:.2f}"
+
+
 col1, col2, col3, col4 = st.columns(4)
 
 champion_count = len([m for m in models if m.get("is_champion")])
 total_models = len(models)
 mape_values = [
-    m["metrics"]["mape"]
+    (m.get("metrics") or {}).get("mape")
     for m in models
-    if m.get("metrics", {}).get("mape", float("inf")) < float("inf")
 ]
+mape_values = [v for v in mape_values if v is not None and v < float("inf")]
 avg_mape = round(sum(mape_values) / len(mape_values), 2) if mape_values else None
 
 with col1:
@@ -81,9 +96,10 @@ else:
         champ_data = [
             {
                 "Model": m["name"],
-                "State": m.get("state") or "all",
-                "MAPE %": round(m.get("metrics", {}).get("mape", 0), 2),
-                "RMSE": round(m.get("metrics", {}).get("rmse", 0), 2),
+                "State": m.get("state") or "National",
+                "MAPE %": round((m.get("metrics") or {}).get("mape", 0), 2),
+                "RMSE": _fmt_large((m.get("metrics") or {}).get("rmse")),
+                "MAE": _fmt_large((m.get("metrics") or {}).get("mae")),
                 "Version": m.get("version", "—"),
             }
             for m in champions

@@ -15,24 +15,32 @@ st.title("📊 Sales Forecast")
 
 @st.cache_data(ttl=300)
 def get_states():
+    """Return list of available forecast targets.
+    Models with state=None are national-level and shown as 'National'.
+    """
     try:
         r = httpx.get(f"{API_BASE}/models", headers=HEADERS, timeout=10)
         if r.status_code == 200:
             models = r.json().get("data", [])
-            states = sorted({m.get("state") or "all" for m in models if m.get("state")})
-            return states if states else ["California"]
+            states = set()
+            for m in models:
+                s = m.get("state")
+                states.add(s if s else "National")
+            return sorted(states)
     except Exception:
         pass
-    return ["California", "Texas", "New York"]
+    return ["National"]
 
 
 @st.cache_data(ttl=86400, show_spinner="Generating forecast...")
 def get_forecast(state: str, weeks: int):
+    # "National" maps to the champion model which is always national-level
+    api_state = "national" if state == "National" else state
     try:
         r = httpx.post(
             f"{API_BASE}/forecast",
             headers=HEADERS,
-            json={"state": state, "weeks": weeks},
+            json={"state": api_state, "weeks": weeks},
             timeout=60,
         )
         if r.status_code == 200:
@@ -46,7 +54,7 @@ states = get_states()
 
 with st.sidebar:
     st.header("Forecast Settings")
-    selected_state = st.selectbox("State", states, index=0)
+    selected_state = st.selectbox("State / Region", states, index=0)
     weeks = st.slider("Forecast horizon (weeks)", min_value=1, max_value=52, value=8)
     run = st.button("Generate Forecast", type="primary", use_container_width=True)
 
@@ -119,8 +127,9 @@ fig.add_trace(
     )
 )
 
+display_region = result.get("state", selected_state) or selected_state
 fig.update_layout(
-    title=f"{result.get('state', selected_state)} — {weeks}-Week Sales Forecast ({model_used})",  # noqa: E501
+    title=f"{display_region.title()} — {weeks}-Week Sales Forecast ({model_used})",
     xaxis_title="Date",
     yaxis_title="Total Sales",
     hovermode="x unified",

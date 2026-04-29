@@ -24,6 +24,20 @@ def get_models():
     return []
 
 
+def _fmt_large(n) -> str:
+    """Format large numbers as 1.23B / 1.23M / 1.23K for readability."""
+    if n is None:
+        return "N/A"
+    n = float(n)
+    if abs(n) >= 1e9:
+        return f"{n / 1e9:.2f}B"
+    if abs(n) >= 1e6:
+        return f"{n / 1e6:.2f}M"
+    if abs(n) >= 1e3:
+        return f"{n / 1e3:.2f}K"
+    return f"{n:.2f}"
+
+
 models = get_models()
 
 if not models:
@@ -32,15 +46,15 @@ if not models:
 
 records = []
 for m in models:
-    metrics = m.get("metrics", {})
+    metrics = m.get("metrics") or {}
     records.append(
         {
             "Model": m["name"],
-            "State": m.get("state") or "all",
+            "State": m.get("state") or "National",
             "Version": m.get("version", "—"),
             "MAPE %": round(metrics.get("mape", 0), 2),
-            "RMSE": round(metrics.get("rmse", 0), 2),
-            "MAE": round(metrics.get("mae", 0), 2),
+            "RMSE": _fmt_large(metrics.get("rmse")),
+            "MAE": _fmt_large(metrics.get("mae")),
             "CV Folds": metrics.get("n_folds", "—"),
             "Champion": "👑" if m.get("is_champion") else "",
             "Path": m.get("path", "—"),
