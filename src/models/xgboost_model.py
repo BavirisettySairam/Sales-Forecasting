@@ -4,6 +4,7 @@ import joblib
 import numpy as np
 import optuna
 import pandas as pd
+import torch
 import xgboost as xgb
 
 from src.features.engineering import get_feature_columns
@@ -11,6 +12,8 @@ from src.models.base import BaseForecaster
 from src.utils.logger import logger
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+_CUDA = torch.cuda.is_available()
 
 
 class XGBoostForecaster(BaseForecaster):
@@ -85,8 +88,11 @@ class XGBoostForecaster(BaseForecaster):
         logger.info("XGBoost Optuna done", best_mape=study.best_value, params=best)
 
         alpha = cfg.get("quantile_alpha", 0.95)
+        gpu_kwargs = {"device": "cuda", "tree_method": "hist"} if _CUDA else {}
+        logger.info("XGBoost fitting final model", device="cuda" if _CUDA else "cpu")
+
         self.model = xgb.XGBRegressor(
-            **best, objective="reg:squarederror", random_state=42, verbosity=0
+            **best, objective="reg:squarederror", random_state=42, verbosity=0, **gpu_kwargs
         )
         self.model.fit(X, y)
 
@@ -95,7 +101,8 @@ class XGBoostForecaster(BaseForecaster):
             objective="reg:quantileerror",
             quantile_alpha=1 - alpha,
             random_state=42,
-            verbosity=0
+            verbosity=0,
+            **gpu_kwargs,
         )
         self._model_lower.fit(X, y)
 
@@ -104,7 +111,8 @@ class XGBoostForecaster(BaseForecaster):
             objective="reg:quantileerror",
             quantile_alpha=alpha,
             random_state=42,
-            verbosity=0
+            verbosity=0,
+            **gpu_kwargs,
         )
         self._model_upper.fit(X, y)
 

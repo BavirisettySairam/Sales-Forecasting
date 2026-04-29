@@ -5,12 +5,15 @@ import lightgbm as lgb
 import numpy as np
 import optuna
 import pandas as pd
+import torch
 
 from src.features.engineering import get_feature_columns
 from src.models.base import BaseForecaster
 from src.utils.logger import logger
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+_CUDA = torch.cuda.is_available()
 
 
 class LightGBMForecaster(BaseForecaster):
@@ -86,18 +89,21 @@ class LightGBMForecaster(BaseForecaster):
         logger.info("LightGBM Optuna done", best_mape=study.best_value, params=best)
 
         alpha = cfg.get("quantile_alpha", 0.95)
+        gpu_kwargs = {"device_type": "gpu"} if _CUDA else {}
+        logger.info("LightGBM fitting final model", device="gpu" if _CUDA else "cpu")
+
         self.model = lgb.LGBMRegressor(
-            **best, objective="regression", random_state=42, verbose=-1
+            **best, objective="regression", random_state=42, verbose=-1, **gpu_kwargs
         )
         self.model.fit(X, y)
 
         self._model_lower = lgb.LGBMRegressor(
-            **best, objective="quantile", alpha=1 - alpha, random_state=42, verbose=-1
+            **best, objective="quantile", alpha=1 - alpha, random_state=42, verbose=-1, **gpu_kwargs
         )
         self._model_lower.fit(X, y)
 
         self._model_upper = lgb.LGBMRegressor(
-            **best, objective="quantile", alpha=alpha, random_state=42, verbose=-1
+            **best, objective="quantile", alpha=alpha, random_state=42, verbose=-1, **gpu_kwargs
         )
         self._model_upper.fit(X, y)
 
