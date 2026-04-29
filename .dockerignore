@@ -1,21 +1,34 @@
+# Version control
 .git
 .gitignore
-.pytest_cache
-.ruff_cache
+
+# Python artifacts
 __pycache__
 *.pyc
 *.pyo
+*.pyd
 *.egg-info
-dist
-build
+.pytest_cache
+.ruff_cache
+dist/
+build/
+
+# Dev / local only
 .env
 secrets/
-models/*.pkl
-models/*.pt
-models/*.joblib
-data/raw/*.csv
-notebooks/
 tests/
+notebooks/
 logs/
+
+# Large data / model artifacts (mounted as volumes in production)
+data/
+models/
+
+# Docs and planning files
 README.md
+EXPLANATION.md
 EXECUTION_PLAN.md
+*.txt
+
+# Local databases
+*.db

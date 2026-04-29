@@ -131,10 +131,10 @@ jobs:
           echo "forecasting-api-key-2026" > secrets/api_key.txt
 
       - name: Build API image
-        run: docker compose build api
+        run: DOCKER_BUILDKIT=1 docker compose build api
 
       - name: Build Streamlit image
-        run: docker compose build streamlit
+        run: DOCKER_BUILDKIT=1 docker compose build streamlit
 
       - name: Smoke test — start containers and hit /health
         env:

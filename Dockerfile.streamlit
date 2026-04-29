@@ -1,19 +1,24 @@
+# syntax=docker/dockerfile:1
 FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install poetry==1.8.3
-RUN poetry config virtualenvs.create false
+# Install poetry + all Python deps before copying source code.
+# pip cache mount means packages are downloaded ONCE and reused on rebuild.
+COPY pyproject.toml poetry.lock ./
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --quiet poetry==1.8.3 \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi --no-root --without dev
 
-COPY pyproject.toml poetry.lock* ./
-RUN poetry install --no-interaction --no-ansi --no-root --without dev
+# Copy only the dashboard source
+COPY src/dashboard/ ./src/dashboard/
 
-COPY . .
-
-RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser
-RUN chown -R appuser:appuser /app
+# Non-root user
+RUN groupadd -r appuser \
+    && useradd -r -g appuser -d /app -s /sbin/nologin appuser \
+    && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8501
-
 CMD ["streamlit", "run", "src/dashboard/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
