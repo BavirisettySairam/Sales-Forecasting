@@ -5,7 +5,6 @@ All features are created PER STATE — never leaking across state boundaries.
 Lag and rolling features use only past data (shift(n) / rolling(n).shift(1)).
 """
 
-from typing import Optional
 import numpy as np
 import pandas as pd
 import holidays as hol
@@ -64,8 +63,6 @@ def _add_holiday_features(grp: pd.DataFrame, country: str = "US") -> pd.DataFram
     years = grp["date"].dt.year.unique().tolist()
     us_holidays = hol.country_holidays(country, years=years)
     holiday_dates = pd.to_datetime(sorted(us_holidays.keys()))
-
-    dates = grp["date"].values
 
     def _days_to_next(d: pd.Timestamp) -> int:
         future = holiday_dates[holiday_dates >= d]
