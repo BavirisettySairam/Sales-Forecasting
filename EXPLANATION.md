@@ -14,9 +14,9 @@
 4. [Phase 1 — Configuration & Utilities](#4-phase-1--configuration--utilities)
 5. [Phase 2 — Data Preprocessing Pipeline](#5-phase-2--data-preprocessing-pipeline)
 6. [Phase 3 — Feature Engineering](#6-phase-3--feature-engineering)
-7. [Phase 4 — Model Implementations](#7-phase-4--model-implementations) *(coming)*
-8. [Phase 5 — Training Pipeline & Model Selection](#8-phase-5--training-pipeline--model-selection) *(coming)*
-9. [Phase 6 — REST API](#9-phase-6--rest-api) *(coming)*
+7. [Phase 4 — Model Implementations](#7-phase-4--model-implementations)
+8. [Phase 5 — Training Pipeline & Model Selection](#8-phase-5--training-pipeline--model-selection)
+9. [Phase 6 — REST API](#9-phase-6--rest-api)
 10. [Phase 7 — Streamlit Dashboard](#10-phase-7--streamlit-dashboard) *(coming)*
 11. [Phase 8 — Testing](#11-phase-8--testing) *(coming)*
 12. [Phase 9 — Documentation](#12-phase-9--documentation) *(coming)*
@@ -683,6 +683,433 @@ Full feature matrix shape: **(11,008 rows × 25 columns)** [state, date, total, 
 
 ---
 
+## 7. Phase 4 — Model Implementations
+
+Five forecasting algorithms are implemented, each extending `BaseForecaster`. Every model must implement: `fit(train_data, target_col)`, `predict(horizon)`, `save(path)`, `load(path)`.
+
+### 7.0 Abstract Base Class (`src/models/base.py`)
+
+```python
+class BaseForecaster(ABC):
+    def __init__(self, name: str, config: dict) -> None:
+        self.name = name        # model identifier used in registry
+        self.config = config    # full training_config.yaml dict
+        self.model = None       # fitted model object (None until fit())
+        self.is_fitted = False  # guard flag — predict() raises if False
+
+    @abstractmethod
+    def predict(self, horizon: int) -> pd.DataFrame:
+        """Must return: date | predicted_value | lower_bound | upper_bound"""
+```
+
+The `predict()` contract guarantees every model returns identical column names and semantics. Routes and the registry can call `forecaster.predict(weeks)` without knowing which algorithm is underneath — classic Liskov Substitution.
+
+The `is_fitted` guard means callers get a clear `RuntimeError("Model not fitted")` instead of a cryptic `AttributeError: 'NoneType' has no attribute 'predict'`.
+
+### 7.1 SARIMA (`src/models/sarima_model.py`)
+
+SARIMA (Seasonal AutoRegressive Integrated Moving Average) is a classical statistical time series model. It models the relationship between a value and its own past values (AR), its own past forecast errors (MA), and seasonal versions of those at period `m`.
+
+**Why SARIMA for weekly sales?** Sales data exhibits strong yearly seasonality (holiday season spikes). With `m=52` (52 weeks = 1 year), SARIMA can learn this pattern from the data without needing engineered features.
+
+**auto_arima:** Rather than manually specifying `(p,d,q)(P,D,Q,52)`, `pmdarima.auto_arima` performs a stepwise search over the order space, evaluating each candidate by AIC (Akaike Information Criterion). AIC penalises complexity — a model that fits marginally better but has more parameters gets a higher (worse) AIC. This prevents overfitting.
+
+```python
+self.model = auto_arima(
+    series,
+    seasonal=True,
+    m=52,              # yearly weekly cycle
+    stepwise=True,     # sequential search (faster than exhaustive grid)
+    information_criterion="aic",
+    suppress_warnings=True,
+    trace=False,       # no per-iteration stdout
+)
+```
+
+**Confidence intervals:** `model.predict(n_periods=h, return_conf_int=True, alpha=0.05)` returns the 95% CI analytically using the fitted ARIMA covariance matrix. This is the most statistically rigorous CI method available (no resampling needed).
+
+**Save/load:** The fitted `pmdarima` model object (including all ARIMA parameters and covariance) is serialised with `joblib.dump`. The training series is also saved so `predict()` can reconstruct forecast dates accurately from the DatetimeIndex.
+
+### 7.2 Prophet (`src/models/prophet_model.py`)
+
+Prophet (Meta/Facebook) is an additive regression model that decomposes a time series into:
+```
+y(t) = trend(t) + seasonality(t) + holidays(t) + ε(t)
+```
+
+- **Trend:** Piecewise linear or logistic growth with automatic changepoint detection
+- **Seasonality:** Fourier series approximation of yearly and weekly patterns
+- **Holidays:** Additive effect around user-specified holiday dates
+
+**Why Prophet?** It handles missing data natively, is robust to outliers in the training data, and requires no feature engineering — the date is the only input. It also provides uncertainty intervals via Stan (a probabilistic programming language) sampling.
+
+**US holiday integration:**
+```python
+import holidays as hol
+us_holidays = pd.DataFrame([
+    {"holiday": name, "ds": pd.Timestamp(date)}
+    for date, name in hol.US(years=range(2015, 2030)).items()
+])
+model = Prophet(holidays=us_holidays, ...)
+```
+The `holidays` library generates exact holiday dates for any year. This allows Prophet to learn that weeks containing Thanksgiving or Christmas have abnormal sales without the model needing to infer this from patterns alone.
+
+**Logging suppression:** Prophet prints fitting progress to stdout via Stan. This pollutes logs and confuses log parsers. Suppression is done at two levels:
+```python
+logging.getLogger("prophet").setLevel(logging.ERROR)
+logging.getLogger("cmdstanpy").setLevel(logging.ERROR)
+```
+
+**Multiplicative seasonality** (`seasonality_mode="multiplicative"`) means seasonal effects are proportional to the trend level — if sales double overall, the Christmas spike also roughly doubles. This is more realistic than additive seasonality for sales data where volume scales.
+
+**Save/load:** Prophet objects are serialised with `joblib`. The `prophet` library itself supports `model_to_json` but joblib is simpler and consistent with all other models.
+
+### 7.3 XGBoost (`src/models/xgboost_model.py`)
+
+XGBoost is a gradient-boosted tree ensemble. Unlike SARIMA and Prophet which model time directly, XGBoost treats forecasting as a supervised regression problem: given features at time t, predict the target at t.
+
+**Architecture decisions:**
+
+**Three models trained per fit:**
+1. `model` (mean prediction) — `objective="reg:squarederror"`
+2. `model_lower` (lower CI) — `objective="reg:quantileerror"`, `quantile_alpha=0.05`
+3. `model_upper` (upper CI) — `objective="reg:quantileerror"`, `quantile_alpha=0.95`
+
+Quantile regression models the conditional quantile of the target distribution, not the mean. The 5th and 95th percentile models together form the 90% confidence interval. This is valid even when the error distribution is not Gaussian.
+
+**Optuna hyperparameter search (50 trials):**
+```python
+study = optuna.create_study(direction="minimize", sampler=TPESampler(seed=42))
+study.optimize(objective, n_trials=50)
+```
+TPE (Tree-structured Parzen Estimator) is a Bayesian optimisation algorithm. After a few random trials, it builds a probabilistic model of which hyperparameter values lead to good performance and samples candidates from the promising region. It finds better hyperparameters than grid search in fewer evaluations.
+
+The objective function runs 3-fold cross-validation on the training data, returning mean MAPE. This prevents selecting hyperparameters that overfit the training set.
+
+**Recursive multi-step forecasting:**
+To forecast `horizon` weeks ahead, the model predicts one week at a time. The predicted value at week t+1 is appended to the history, features are recomputed, and the model predicts t+2:
+```
+history → features → predict(t+1) → append t+1 to history
+                                   → features → predict(t+2) → ...
+```
+This is necessary because lag features (like `lag_1`) at step t+2 require the value at t+1, which is not yet available. The downside is that errors compound — a poor prediction at t+1 degrades the prediction at t+2. This is an inherent limitation of autoregressive multi-step forecasting.
+
+**Data normalisation for feature engineering:** XGBoost/LightGBM's `_ensure_feature_columns()` helper adds dummy `state` and `category` columns if missing. This allows the models to operate on nationally-aggregated data (without state breakdown) while still calling the shared `create_features()` function which expects those columns.
+
+### 7.4 LightGBM (`src/models/lightgbm_model.py`)
+
+LightGBM is architecturally similar to XGBoost but uses a different tree-growing strategy:
+
+| | XGBoost | LightGBM |
+|---|---|---|
+| Tree growth | Depth-first (level-wise) | Leaf-wise (best-leaf) |
+| Speed | Slower | Faster (especially on large datasets) |
+| Overfitting risk | Lower | Higher on small datasets |
+| Quantile CI | `objective="reg:quantileerror"` | `objective="quantile"`, `alpha=α` |
+
+For this dataset (~11,000 rows), both perform similarly. LightGBM adds `num_leaves` to the Optuna search space — this controls tree complexity and is more direct than `max_depth` for leaf-wise growth.
+
+**Why include both?** They are different algorithmic families that may find different optimal patterns for different states. The champion selection will choose whichever performs better for each state on the actual data.
+
+### 7.5 LSTM (`src/models/lstm_model.py`)
+
+LSTM (Long Short-Term Memory) is a recurrent neural network architecture designed to capture long-range temporal dependencies that tree models cannot express. Unlike XGBoost/LightGBM, LSTM learns the temporal structure directly from the sequence — no lag feature engineering needed.
+
+**Architecture:**
+```
+Input sequence (seq_len × 1) → LSTM(hidden=64, layers=2, dropout=0.2) → Dropout(0.2) → Linear(64 → 1) → output scalar
+```
+
+**Data preparation:**
+1. `MinMaxScaler` normalises the target to [0, 1] — LSTMs train more stably on normalised data
+2. The scaler is fit on training data only; the same fitted scaler is used at inference (preventing leakage)
+3. Sequences of length `seq_len=30` weeks are created: `X[i] = total[i-30:i]`, `y[i] = total[i]`
+
+**Training loop:**
+```python
+optimizer = Adam(lr=0.001)
+loss = MSELoss()
+for epoch in range(50):
+    for batch_X, batch_y in DataLoader(dataset, batch_size=32):
+        pred = model(batch_X)
+        loss = loss_fn(pred, batch_y)
+        loss.backward()
+        optimizer.step()
+```
+
+**Monte Carlo Dropout confidence intervals:**
+Standard neural networks produce point predictions. To get uncertainty estimates, we use MC Dropout — a technique that approximates Bayesian inference:
+1. Keep `Dropout` layers active at inference time (normally they are disabled)
+2. Run 100 forward passes through the network
+3. Each pass produces a slightly different prediction (because different neurons are dropped each time)
+4. The mean of 100 predictions is the point forecast
+5. The 2.5th and 97.5th percentiles are the 95% CI bounds
+
+This works because a dropout network can be interpreted as an ensemble of exponentially many models sharing parameters. The variance across forward passes estimates epistemic uncertainty (model uncertainty).
+
+**Save/load:** Two files are saved per model:
+- `{path}.pt` — PyTorch state dict (`torch.save(net.state_dict(), ...)`)
+- `{path}.meta` — joblib file containing scaler, last sequence, config, and last date
+
+`weights_only=True` in `torch.load` prevents arbitrary code execution from untrusted checkpoint files (PyTorch security best practice since 2.x).
+
+---
+
+## 8. Phase 5 — Training Pipeline & Model Selection
+
+### 8.1 Cross-Validation (`src/pipeline/evaluate.py`)
+
+**Expanding window CV design:**
+```
+Total weeks: N
+min_train_size: 52 (at least 1 year of training data for the first fold)
+step = (N - 52 - horizon) // n_splits
+
+Fold 0: train = data[0 : 52],        test = data[52 : 52+horizon]
+Fold 1: train = data[0 : 52+step],   test = data[52+step : 52+step+horizon]
+Fold 2: train = data[0 : 52+2*step], test = data[52+2*step : 52+2*step+horizon]
+...
+```
+
+Each fold trains a fresh model instance (no state sharing between folds) and evaluates on `horizon` future weeks. This exactly mimics the production use case — train on historical data, predict N weeks ahead.
+
+**`calculate_metrics()` implementation:**
+```python
+mask = actual != 0  # exclude zeros from MAPE denominator
+mape = mean(|actual[mask] - predicted[mask]| / actual[mask]) × 100
+rmse = sqrt(mean((actual - predicted)²))
+mae  = mean(|actual - predicted|)
+```
+
+The zero-mask for MAPE prevents division by zero. Since Pandera enforces `total >= 0`, zero values represent weeks with no recorded sales (rare but possible). Including them in MAPE would produce `inf` or `nan`.
+
+**Error handling:** If a model raises during a CV fold (e.g. SARIMA fails to converge for a particular state), the fold is logged as a warning and skipped. The model is not disqualified — it gets credit for folds it completes successfully. If all folds fail, the model receives `mape=inf` and will not be selected as champion.
+
+### 8.2 Model Selection (`src/pipeline/select.py`)
+
+```python
+ranked = sorted(
+    cv_results.items(),
+    key=lambda kv: (kv[1]["mape"], kv[1]["rmse"])
+)
+champion = ranked[0][0]
+```
+
+Primary sort by `mape` ascending — the model with the lowest average MAPE across CV folds wins. RMSE is the tiebreaker (same sort tuple position). All rankings are returned by `rank_models()` for logging and dashboard display.
+
+**Why MAPE over RMSE?** RMSE is scale-sensitive — a 1000-unit error on a state with $10M monthly sales is tiny, but the same error on a state with $100K is enormous. MAPE normalises by the actual value, making it directly comparable across states with different sales volumes.
+
+### 8.3 Model Registry (`src/pipeline/registry.py`)
+
+A lightweight JSON registry at `models/registry.json` tracks all trained model artifacts:
+```json
+{
+  "models": [
+    {
+      "name": "xgboost",
+      "version": "20260429_154821",
+      "path": "models/xgboost_20260429_154821",
+      "metrics": {"mape": 6.5, "rmse": 42.0, "mae": 33.0},
+      "is_champion": true,
+      "state": null
+    }
+  ],
+  "champion": {"name": "xgboost", "version": "20260429_154821", "path": "..."}
+}
+```
+
+**Why a JSON file instead of PostgreSQL for the registry?** The registry is read at API startup and on every `/forecast` cache miss (to find the champion model path). A JSON file is an order of magnitude faster to read than a DB query and requires no DB connection. PostgreSQL stores the full training metrics and history; the registry is the operational index.
+
+**Version scheme:** `YYYYMMDD_HHMMSS` — this makes versions sort chronologically by string comparison. The latest version is always retrievable without parsing.
+
+When `is_champion=True` is set for a new model, all other models' `is_champion` flags are cleared atomically (within the same registry write). This prevents two champions existing simultaneously.
+
+### 8.4 Training Orchestrator (`src/pipeline/train.py`)
+
+The orchestrator ties together all phases in a single CLI entry point:
+
+```
+1. Load config (YAML)
+2. run_pipeline(data_path) → clean weekly DataFrame
+3. Optional state filter (for per-state or single-state runs)
+4. For each model:
+   a. time_series_cv() → avg MAPE/RMSE/MAE
+   b. Fit on full data (for production forecasting)
+5. select_best_model() → champion name
+6. save() all fitted models to disk
+7. save_model() in registry (mark champion)
+8. Log summary rankings
+9. Return run metadata
+```
+
+**`--skip-cv` flag:** CV with 5 folds × 5 models × 50 Optuna trials each takes hours. During development, `--skip-cv` bypasses CV (assigns `mape=0` to all) and goes straight to fitting. This allows rapid iteration on API and dashboard code without waiting for full training.
+
+**Background retraining via FastAPI:** The `/retrain` endpoint triggers `_run_retraining()` via `BackgroundTasks`. FastAPI continues serving requests while retraining runs in a thread. When complete, Redis cache is invalidated so the next forecast request loads the new champion.
+
+---
+
+## 9. Phase 6 — REST API
+
+### 9.1 FastAPI Application (`src/api/main.py`)
+
+**Lifespan context manager:**
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()           # create tables if they don't exist
+    redis_client.health_check()  # verify Redis connection
+    yield               # app runs
+    # shutdown: connections close automatically
+```
+
+The `lifespan` pattern (replacing the deprecated `@app.on_event("startup")`) runs startup code before the first request and shutdown code after the last. DB and Redis availability are checked at startup — if they fail, a warning is logged but the server still starts (degraded mode allows `/health` to report the outage).
+
+**Docs disabled in production:**
+```python
+_docs_url = None if settings.environment == "production" else "/docs"
+app = FastAPI(docs_url=_docs_url, redoc_url=_redoc_url)
+```
+Swagger UI exposes your full API schema to anyone who visits `/docs`. In production, this is an unnecessary information disclosure. Disabling it forces clients to use the documented API rather than exploring via browser.
+
+**Middleware order matters.** FastAPI processes middleware in reverse registration order (last-added = first-executed on request). The order:
+1. `CORSMiddleware` — added last, runs first on ingress (must process preflight OPTIONS before auth)
+2. `RequestLoggingMiddleware` — added second, runs second (logs the request including CORS-resolved headers)
+3. `SecurityHeadersMiddleware` — added first, runs last (adds headers to the already-processed response)
+
+### 9.2 API Key Authentication (`src/api/auth.py`)
+
+```python
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
+    if not api_key:
+        raise HTTPException(401, "Missing API key")
+    if api_key not in settings.api_keys:
+        raise HTTPException(401, "Invalid API key")
+    return api_key
+```
+
+`auto_error=False` means FastAPI does not automatically return 401 when the header is absent — the function handles it explicitly with a descriptive message. This is preferred over the auto error because it lets us return our standardised error envelope rather than FastAPI's default.
+
+Applied as a route dependency: `@router.post("/forecast", dependencies=[Depends(verify_api_key)])`. This runs before the route handler and short-circuits with 401 if auth fails. The `/health` endpoint deliberately has no `verify_api_key` dependency — load balancers and monitoring systems need to hit health checks without credentials.
+
+`settings.api_keys` is a `list[str]` loaded from the Docker secret at startup. Multiple API keys are supported — each client can have its own key (enabling per-client rate limiting and revocation).
+
+### 9.3 Rate Limiting (`src/api/rate_limiter.py`)
+
+The rate limiter uses a **Redis sorted set sliding window** — more accurate than simple counter-based approaches:
+
+```python
+# Each request is stored as a member with score = unix timestamp
+pipe.zremrangebyscore(key, 0, now - window_seconds)  # remove old entries
+pipe.zadd(key, {str(now): now})                       # add this request
+pipe.zcard(key)                                        # count in window
+pipe.expire(key, window_seconds)                       # auto-expire the key
+```
+
+This accurately counts requests in the last `window_seconds` regardless of when within the window they occurred. A simple counter approach (incr + expire) can allow up to `2 × max_requests` in a bad timing scenario (requests at the end of one window + start of the next).
+
+**Per API key, not per IP.** The key includes the `X-API-Key` header value:
+```python
+client_id = request.headers.get("X-API-Key") or request.client.host
+key = f"rate_limit:{client_id}"
+```
+IP-based limiting fails behind a NAT (all users of an office share one IP). API-key-based limiting is per-client.
+
+**Rate limit response headers:**
+```
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 73
+X-RateLimit-Reset: 1745930400
+```
+Standard headers allow clients to implement their own throttling before hitting 429.
+
+**Limits by endpoint:**
+- `/forecast` — 100 req/min: frequent requests expected (dashboard polling)
+- `/retrain` — 5 req/hr: expensive operation, should not be triggered carelessly
+- `/models`, `/health` — 200 req/min: read-only, cheap
+
+### 9.4 Middleware (`src/api/middleware.py`)
+
+**`RequestLoggingMiddleware`:** Measures wall-clock latency with `time.perf_counter()` (higher resolution than `time.time()`). Generates a UUID4 per request and injects it as `X-Request-ID` response header. Log line example:
+```
+INFO | HTTP request | method=POST path=/forecast status=200 ms=47.3 request_id=550e8400-...
+```
+
+**`SecurityHeadersMiddleware`** — six headers added to every response:
+
+| Header | Value | Protection |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | Prevents MIME-type sniffing (browser won't execute a file labelled as text/plain as JavaScript) |
+| `X-Frame-Options` | `DENY` | Prevents clickjacking (this API cannot be embedded in an iframe) |
+| `X-XSS-Protection` | `1; mode=block` | Legacy IE/Chrome XSS filter (belt-and-suspenders) |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Forces HTTPS for 1 year |
+| `Content-Security-Policy` | `default-src 'self'` | Only this origin can load resources (no CDN injection, no script injection) |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Prevents full URL leaking in Referer header across origins |
+
+### 9.5 Custom Exception Handlers (`src/api/exceptions.py`)
+
+All exceptions are mapped to clean JSON responses. Raw Python tracebacks are never returned to clients — they expose internal structure and may reveal file paths, library versions, or sensitive data.
+
+```python
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception("Unhandled exception", path=str(request.url))  # full traceback in logs
+    return JSONResponse(500, content=error_response("Internal server error", 500))  # clean to client
+```
+
+`logger.exception()` logs the full traceback (including exception type, message, and stack frames) to the log file. The client only sees "Internal server error". Security through obscurity is a layer — not a strategy — but there is no reason to hand attackers stack traces.
+
+Custom exception types and their HTTP codes:
+
+| Exception | HTTP | When |
+|---|---|---|
+| `StateNotFoundException` | 404 | State not in whitelist or not trained |
+| `ModelNotTrainedException` | 503 | No champion model found in registry |
+| `ForecastGenerationError` | 500 | Model load or prediction fails |
+| `RateLimitExceededError` | 429 | Sliding window limit exceeded |
+| `UnauthorizedError` | 401 | Missing or invalid API key |
+| Uncaught `Exception` | 500 | Any other runtime error |
+
+### 9.6 Forecast Route (`src/api/routes/forecast.py`)
+
+**Request flow for `POST /forecast`:**
+```
+1. verify_api_key() — 401 if invalid
+2. rate_limiter.check() — 429 if exceeded
+3. _validate_state() — 404 if state not in whitelist (title-cased for normalisation)
+4. redis.get_forecast(state, weeks) — return cached response if hit (sub-ms)
+5. get_champion() — load model path from registry
+6. forecaster.load(model_path) — deserialise model from disk
+7. forecaster.predict(weeks) — generate horizon weeks of forecasts
+8. redis.set_forecast(state, weeks, data) — cache for 24h
+9. db.add(Forecast(...)) — persist each forecast point to PostgreSQL
+10. return success_response(data)
+```
+
+**State normalisation:** `state.strip().title()` converts `"california"`, `"CALIFORNIA"`, `"  California  "` all to `"California"`. This prevents cache fragmentation where the same state has different cache keys under different capitalisations.
+
+**Redis before DB:** The cache is checked before loading the model — model loading involves disk I/O and potentially hundreds of milliseconds. A cache hit returns in under 1ms without touching the model or database. The 24-hour TTL means most daytime requests are served from cache.
+
+### 9.7 Input Sanitisation
+
+**State whitelist:** `VALID_STATES` is a module-level set populated at startup from the training data. A state string that isn't in this set gets a 404, not a 500. This is a whitelist approach — unknown inputs are rejected rather than processed.
+
+**Pydantic field constraints:**
+```python
+class ForecastRequest(BaseModel):
+    state: str = Field(..., min_length=2, max_length=100)
+    weeks: int = Field(default=8, ge=1, le=52)
+```
+`weeks=0` or `weeks=100` are rejected at the schema level before reaching route logic. `min_length=2` prevents empty strings.
+
+**SQLAlchemy ORM (no raw SQL):** All database writes use ORM models:
+```python
+db.add(Forecast(state=state, forecast_date=..., predicted_value=...))
+```
+SQLAlchemy generates parameterised SQL (`INSERT INTO forecasts (state, ...) VALUES ($1, ...)`). The `state` variable is never interpolated into a SQL string, making SQL injection impossible through the normal code path.
+
+---
+
 ## 13. Phase 10 — CI/CD Pipeline
 
 CI runs on every push to `main` or `develop` and on every pull request targeting `main`.
@@ -779,4 +1206,18 @@ For production, most requests will be cache hits because the same `(state, weeks
 
 ---
 
-*This document is updated as each phase is completed. Phases 4–9 sections will be filled in as implementation progresses.*
+## 10. Phase 7 — Streamlit Dashboard
+
+*(Implementation in progress — section will be completed after Phase 7 is merged.)*
+
+The dashboard is a 4-page Streamlit application that calls the FastAPI backend via `httpx`. It never loads models directly — all data flows through the API.
+
+**Pages:**
+1. `01_forecast.py` — state dropdown, weeks slider, Plotly chart with historical + forecast + CI band, forecast table
+2. `02_model_comparison.py` — grouped bar chart of MAPE across all 5 models, champion highlighted, state×model MAPE heatmap
+3. `03_training_history.py` — table of training runs from PostgreSQL, per-fold metrics expandable, timeline chart
+4. `04_api_health.py` — live status of API/DB/Redis, response time chart, recent request logs
+
+---
+
+*This document is updated as each phase is completed.*
