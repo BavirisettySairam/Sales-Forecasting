@@ -39,7 +39,6 @@ class SARIMAForecaster(BaseForecaster):
                 max_q=cfg.get("max_q", 3),
                 max_P=cfg.get("max_P", 2),
                 max_Q=cfg.get("max_Q", 2),
-                D=cfg.get("D", 1),
                 trace=False,
             )
 

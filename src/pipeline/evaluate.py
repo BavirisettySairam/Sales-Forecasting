@@ -25,7 +25,7 @@ def time_series_cv(
     target_col: str = "total",
     n_splits: int = 5,
     horizon: int = 12,
-    min_train_size: int = 52,
+    min_train_size: int = 110,
 ) -> dict[str, float]:
     """
     Expanding-window CV split by unique calendar dates (not row index).

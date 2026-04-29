@@ -120,18 +120,17 @@ def impute_missing(df: pd.DataFrame, method: str = "interpolate") -> pd.DataFram
     method: 'interpolate' (linear), 'ffill', or 'bfill'
     """
 
-    def _fill(grp: pd.DataFrame) -> pd.DataFrame:
+    def _fill_series(series: pd.Series) -> pd.Series:
         if method == "interpolate":
-            grp["total"] = grp["total"].interpolate(
-                method="linear", limit_direction="both"
-            )
+            return series.interpolate(method="linear", limit_direction="both")
         elif method == "ffill":
-            grp["total"] = grp["total"].ffill().bfill()
+            return series.ffill().bfill()
         elif method == "bfill":
-            grp["total"] = grp["total"].bfill().ffill()
-        return grp
+            return series.bfill().ffill()
+        return series
 
-    df = df.groupby(["state", "category"], group_keys=False).apply(_fill)
+    df = df.copy()
+    df["total"] = df.groupby(["state", "category"])["total"].transform(_fill_series)
     remaining_nulls = df["total"].isna().sum()
     if remaining_nulls:
         logger.warning(
