@@ -1,0 +1,89 @@
+data:
+  raw_path: "data/raw/dataset.csv"
+  date_column: "Date"
+  target_column: "Total"
+  state_column: "State"
+  category_column: "Category"
+  # Actual format in the CSV is M/D/YYYY (e.g. 1/12/2019); cleaner handles detection
+  date_format: "%m/%d/%Y"
+
+preprocessing:
+  fill_method: "interpolate"       # interpolate, ffill, bfill
+  outlier_method: "iqr"            # iqr, zscore, none
+  outlier_threshold: 1.5
+
+features:
+  lag_periods: [1, 7, 14, 30]
+  rolling_windows: [7, 14, 30]
+  rolling_stats: ["mean", "std"]
+  calendar_features: ["dayofweek", "month", "quarter", "weekofyear", "is_month_start", "is_month_end"]
+  holiday_country: "US"
+
+training:
+  forecast_horizon: 8              # weeks
+  cv_folds: 3                      # expanding window folds
+  cv_min_train_weeks: 30           # minimum training weeks for first fold
+  primary_metric: "mape"           # mape, rmse, mae
+  tiebreaker_metric: "rmse"
+  random_seed: 42
+
+models:
+  sarima:
+    enabled: true
+    auto_arima: true
+    seasonal_period: 52            # weekly seasonality
+    max_p: 3
+    max_q: 3
+    max_P: 2
+    max_Q: 2
+
+  prophet:
+    enabled: true
+    yearly_seasonality: true
+    weekly_seasonality: true
+    changepoint_prior_scale: 0.05
+    seasonality_prior_scale: 10.0
+
+  xgboost:
+    enabled: true
+    optuna_trials: 50
+    param_space:
+      n_estimators: [100, 1000]
+      max_depth: [3, 10]
+      learning_rate: [0.01, 0.3]
+      subsample: [0.6, 1.0]
+      colsample_bytree: [0.6, 1.0]
+
+  lightgbm:
+    enabled: true
+    optuna_trials: 50
+    param_space:
+      n_estimators: [100, 1000]
+      max_depth: [3, 10]
+      learning_rate: [0.01, 0.3]
+      num_leaves: [20, 150]
+      subsample: [0.6, 1.0]
+
+  lstm:
+    enabled: true
+    sequence_length: 30
+    hidden_size: 64
+    num_layers: 2
+    dropout: 0.2
+    epochs: 100
+    batch_size: 32
+    learning_rate: 0.001
+    early_stopping_patience: 10
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins: ["http://localhost:8501", "http://streamlit:8501"]
+
+cache:
+  ttl_seconds: 86400               # 24 hours
+  prefix: "forecast"
+
+database:
+  pool_size: 5
+  max_overflow: 10

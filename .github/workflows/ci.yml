@@ -1,0 +1,99 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+      - name: Ruff lint
+        run: poetry run ruff check src/ tests/
+      - name: Black format check
+        run: poetry run black --check src/ tests/
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: forecasting_test
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: test_password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://app:test_password@localhost:5432/forecasting_test
+          REDIS_URL: redis://localhost:6379/0
+          ENVIRONMENT: test
+        run: poetry run pytest tests/ -v --tb=short
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API image
+        run: docker-compose build api
+      - name: Build Streamlit image
+        run: docker-compose build streamlit
+      - name: Smoke test — containers start
+        run: |
+          docker-compose up -d
+          sleep 10
+          curl -f http://localhost:8000/health || exit 1
+          docker-compose down
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+          pip install pip-audit safety
+      - name: Dependency vulnerability scan (pip-audit)
+        run: pip-audit --strict
+      - name: Safety check
+        run: safety check
+        continue-on-error: true
