@@ -72,6 +72,13 @@ class XGBoostForecaster(BaseForecaster):
         cfg = self.config.get("xgboost", {})
         n_trials = cfg.get("n_trials", 50)
 
+        # Aggregate across states if multi-state — keeps predict() output comparable to national actuals
+        if "state" in train_data.columns and train_data["state"].nunique() > 1:
+            agg = train_data.groupby("date")[target_col].sum().reset_index()
+            agg["state"] = "national"
+            agg["category"] = "all"
+            train_data = agg
+
         X, y = self._build_Xy(train_data, target_col)
         self._last_known = train_data.copy()
 
