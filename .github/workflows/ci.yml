@@ -131,21 +131,21 @@ jobs:
           echo "forecasting-api-key-2026" > secrets/api_key.txt
 
       - name: Build API image
-        run: docker-compose build api
+        run: docker compose build api
 
       - name: Build Streamlit image
-        run: docker-compose build streamlit
+        run: docker compose build streamlit
 
       - name: Smoke test — start containers and hit /health
         env:
           DB_PASSWORD: test_db_password
         run: |
-          docker-compose up -d postgres redis
+          docker compose up -d postgres redis
           echo "Waiting for postgres and redis to be healthy..."
           sleep 15
-          docker-compose up -d api
+          docker compose up -d api
           echo "Waiting for API to start..."
           sleep 20
           curl -f --retry 5 --retry-delay 5 http://localhost:8000/health || \
-            (docker-compose logs api && exit 1)
-          docker-compose down -v
+            (docker compose logs api && exit 1)
+          docker compose down -v
