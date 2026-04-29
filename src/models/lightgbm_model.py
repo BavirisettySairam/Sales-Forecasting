@@ -64,8 +64,10 @@ class LightGBMForecaster(BaseForecaster):
         model = lgb.LGBMRegressor(
             **params, objective="regression", random_state=42, verbose=-1
         )
+        # Use .values so sklearn's internal splits don't trigger feature-name warnings
+        X_arr = X.values if hasattr(X, "values") else X
         scores = cross_val_score(
-            model, X, y, cv=3, scoring=make_scorer(mean_absolute_percentage_error)
+            model, X_arr, y, cv=3, scoring=make_scorer(mean_absolute_percentage_error)
         )
         return scores.mean()
 
