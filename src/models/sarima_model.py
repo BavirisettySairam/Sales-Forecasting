@@ -39,6 +39,8 @@ class SARIMAForecaster(BaseForecaster):
                 max_q=cfg.get("max_q", 3),
                 max_P=cfg.get("max_P", 2),
                 max_Q=cfg.get("max_Q", 2),
+                seasonal_test="ch",  # Canova-Hansen: works with series length >= m (OCSB needs 3×m)
+                max_D=1,
                 trace=False,
             )
 
