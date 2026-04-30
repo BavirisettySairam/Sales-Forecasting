@@ -1,4 +1,6 @@
+import os
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
@@ -6,6 +8,17 @@ from sqlalchemy import engine_from_config, pool
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# Load .env so DATABASE_URL overrides alembic.ini without committing credentials.
+_env_file = Path(__file__).parents[3] / ".env"
+if _env_file.exists():
+    for _line in _env_file.read_text().splitlines():
+        if "=" in _line and not _line.startswith("#"):
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
+if os.environ.get("DATABASE_URL"):
+    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
 
 from src.db.models import Base  # noqa: E402
 

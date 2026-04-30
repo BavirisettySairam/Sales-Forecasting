@@ -6,6 +6,41 @@ import pandas as pd
 from src.utils.logger import logger
 
 
+def train_val_test_split(
+    data: pd.DataFrame,
+    train_frac: float = 0.70,
+    val_frac: float = 0.15,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Chronological 70:15:15 split by unique calendar dates (not row index).
+    Returns (train_df, val_df, test_df).
+    Multi-state data is split by date so all states are represented in each fold.
+    """
+    sorted_dates = sorted(data["date"].unique())
+    n = len(sorted_dates)
+
+    train_end = max(1, int(n * train_frac))
+    val_end = max(train_end + 1, int(n * (train_frac + val_frac)))
+    val_end = min(val_end, n - 1)  # ensure at least 1 date in test
+
+    train_cutoff = sorted_dates[train_end - 1]
+    val_cutoff = sorted_dates[val_end - 1]
+
+    train = data[data["date"] <= train_cutoff].copy()
+    val = data[(data["date"] > train_cutoff) & (data["date"] <= val_cutoff)].copy()
+    test = data[data["date"] > val_cutoff].copy()
+
+    logger.info(
+        "70:15:15 split",
+        train_dates=len(data[data["date"] <= train_cutoff]["date"].unique()),
+        val_dates=len(val["date"].unique()),
+        test_dates=len(test["date"].unique()),
+        train_cutoff=str(train_cutoff)[:10],
+        val_cutoff=str(val_cutoff)[:10],
+    )
+    return train, val, test
+
+
 def calculate_metrics(actual: np.ndarray, predicted: np.ndarray) -> dict[str, float]:
     mask = actual != 0
     mape = (
@@ -25,40 +60,56 @@ def time_series_cv(
     target_col: str = "total",
     n_splits: int = 5,
     horizon: int = 12,
-    min_train_size: int = 52,
+    min_train_size: int = 160,
 ) -> dict[str, float]:
     """
-    Expanding window cross-validation (no future leakage).
-    Each fold trains on all data up to the split point and evaluates
-    on the next `horizon` weeks.
-    Returns averaged MAPE, RMSE, MAE across folds.
+    Expanding-window CV split by unique calendar dates (not row index).
+    Multi-state data: trains on all states up to the cutoff date, evaluates
+    on the national aggregate (sum across states) for the test window.
     """
-    n = len(data)
+    sorted_dates = sorted(data["date"].unique())
+    n_dates = len(sorted_dates)
+
+    if n_dates < min_train_size + horizon:
+        logger.warning(
+            "Not enough dates for CV",
+            n_dates=n_dates,
+            required=min_train_size + horizon,
+        )
+        return {"mape": float("inf"), "rmse": float("inf"), "mae": float("inf"), "n_folds": 0}
+
+    step = max((n_dates - min_train_size - horizon) // n_splits, 1)
     fold_metrics: list[dict[str, float]] = []
 
-    step = max((n - min_train_size - horizon) // n_splits, 1)
-
     for fold in range(n_splits):
-        train_end = min_train_size + fold * step
-        test_end = train_end + horizon
-
-        if test_end > n:
+        train_end_idx = min_train_size + fold * step
+        test_end_idx = train_end_idx + horizon
+        if test_end_idx > n_dates:
             break
 
-        train = data.iloc[:train_end]
-        test = data.iloc[train_end:test_end]
+        cutoff = sorted_dates[train_end_idx - 1]
+        test_end = sorted_dates[test_end_idx - 1]
+
+        train = data[data["date"] <= cutoff].copy()
+        test = data[(data["date"] > cutoff) & (data["date"] <= test_end)].copy()
 
         try:
             forecaster = model_cls(model_config)
             forecaster.fit(train, target_col)
             forecast_df = forecaster.predict(horizon)
-            actual = test[target_col].values[: len(forecast_df)]
-            predicted = forecast_df["predicted_value"].values[: len(actual)]
-            metrics = calculate_metrics(actual, predicted)
+
+            # Aggregate actual values to national level (sum across states per date)
+            actual = (
+                test.groupby("date")[target_col].sum().sort_index().values
+            )
+            predicted = forecast_df["predicted_value"].values
+            n = min(len(actual), len(predicted))
+            metrics = calculate_metrics(actual[:n], predicted[:n])
             fold_metrics.append(metrics)
-            logger.debug("CV fold done", fold=fold + 1, **metrics)
+            logger.info("CV fold done", fold=fold + 1, cutoff=str(cutoff)[:10], **metrics)
         except Exception as exc:
             logger.warning("CV fold failed", fold=fold + 1, error=str(exc))
+            logger.exception("CV fold traceback")
 
     if not fold_metrics:
         return {

@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 
 import httpx
@@ -6,140 +7,165 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from theme import (  # noqa: E402
+    C_ACCENT,
+    C_DANGER,
+    C_PRIMARY,
+    C_SAGE,
+    apply_theme,
+    callout,
+    hex_rgba,
+    inject_css,
+    kpi,
+    page_header,
+    section_label,
+)
+
 API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8000")
 API_KEY = os.environ.get("API_KEY", "forecasting-api-key-2026")
 HEADERS = {"X-API-Key": API_KEY}
 
-st.set_page_config(page_title="API Health", page_icon="❤️", layout="wide")
-st.title("❤️ API Health Monitor")
+st.set_page_config(page_title="API Health", page_icon="heart", layout="wide")
+inject_css()
 
-auto_refresh = st.sidebar.checkbox("Auto-refresh (30s)", value=False)
+
+def timed_get(path: str, auth: bool = False) -> dict:
+    headers = HEADERS if auth else {}
+    started = time.perf_counter()
+    try:
+        resp = httpx.get(f"{API_BASE}{path}", headers=headers, timeout=5)
+        elapsed = round((time.perf_counter() - started) * 1000, 1)
+        is_json = resp.headers.get("content-type", "").startswith("application/json")
+        return {
+            "path": path,
+            "status": resp.status_code,
+            "latency_ms": elapsed,
+            "ok": resp.status_code < 400,
+            "body": resp.json() if is_json else {},
+        }
+    except Exception as exc:
+        return {
+            "path": path,
+            "status": "error",
+            "latency_ms": None,
+            "ok": False,
+            "error": str(exc),
+            "body": {},
+        }
+
+
+with st.sidebar:
+    st.markdown("### Controls")
+    auto_refresh = st.checkbox("Auto-refresh every 30 seconds", value=False)
+    if st.button("Refresh Now", type="primary", width="stretch"):
+        st.rerun()
+    st.caption(f"API base: {API_BASE}")
+
 if auto_refresh:
     time.sleep(30)
     st.rerun()
 
-if st.sidebar.button("Refresh Now", use_container_width=True):
-    st.cache_data.clear()
-    st.rerun()
+page_header("System Monitor", "API health, latency, and endpoint spot checks.")
 
+health_check = timed_get("/health")
+health = health_check.get("body", {}).get("data", {})
+api_ok = health.get("api") == "ok"
+db_ok = health.get("database") == "ok"
+redis_ok = health.get("redis") == "ok"
+latency = health_check.get("latency_ms")
 
-def check_health() -> dict:
-    start = time.perf_counter()
-    try:
-        r = httpx.get(f"{API_BASE}/health", timeout=5)
-        latency_ms = round((time.perf_counter() - start) * 1000, 1)
-        if r.status_code == 200:
-            data = r.json().get("data", {})
-            data["latency_ms"] = latency_ms
-            data["status_code"] = 200
-            return data
-        return {"api": "error", "status_code": r.status_code, "latency_ms": latency_ms}
-    except Exception as e:
-        return {
-            "api": "unreachable",
-            "error": str(e),
-            "latency_ms": None,
-            "status_code": None,
-        }
+c1, c2, c3, c4 = st.columns(4)
+for col, label, value, sub, color in [
+    (
+        c1,
+        "API",
+        health.get("api", "down").upper(),
+        "FastAPI",
+        C_SAGE if api_ok else C_DANGER,
+    ),
+    (
+        c2,
+        "Database",
+        health.get("database", "-").upper(),
+        "SQLAlchemy",
+        C_SAGE if db_ok else C_DANGER,
+    ),
+    (
+        c3,
+        "Redis",
+        health.get("redis", "-").upper(),
+        "cache/rate limit",
+        C_SAGE if redis_ok else C_ACCENT,
+    ),
+    (c4, "Latency", f"{latency} ms" if latency else "-", "/health", C_PRIMARY),
+]:
+    with col:
+        st.markdown(kpi(label, value, sub, color), unsafe_allow_html=True)
 
-
-health = check_health()
-
-col1, col2, col3, col4 = st.columns(4)
-
-
-def status_badge(val: str) -> str:
-    return "✅" if val == "ok" else "❌"
-
-
-with col1:
-    api_s = health.get("api", "unknown")
-    st.metric("API", f"{status_badge(api_s)} {api_s.upper()}")
-with col2:
-    db_s = health.get("database", "unknown")
-    st.metric("Database", f"{status_badge(db_s)} {db_s.upper()}")
-with col3:
-    redis_s = health.get("redis", "unknown")
-    st.metric("Redis", f"{status_badge(redis_s)} {redis_s.upper()}")
-with col4:
-    lat = health.get("latency_ms")
-    st.metric("Latency", f"{lat} ms" if lat else "N/A")
+if not api_ok:
+    st.error(health_check.get("error") or "API is not healthy.")
+    callout(f"Start the API service at {API_BASE} before using the dashboard.")
+    st.stop()
 
 st.divider()
 
-if health.get("api") == "unreachable":
-    st.error(f"API is unreachable: {health.get('error')}")
-    st.info(f"Make sure the API is running at `{API_BASE}`")
-    st.stop()
-
-st.subheader("Response Time History")
-
 if "latency_history" not in st.session_state:
-    st.session_state["latency_history"] = []
+    st.session_state.latency_history = []
+if latency is not None:
+    st.session_state.latency_history.append(latency)
+    st.session_state.latency_history = st.session_state.latency_history[-60:]
 
-lat = health.get("latency_ms")
-if lat is not None:
-    st.session_state["latency_history"].append(lat)
-    if len(st.session_state["latency_history"]) > 50:
-        st.session_state["latency_history"] = st.session_state["latency_history"][-50:]
-
-history = st.session_state["latency_history"]
+section_label("Latency History")
+history = st.session_state.latency_history
 if len(history) > 1:
     fig = go.Figure()
+    fig.add_hline(y=300, line=dict(color=hex_rgba(C_SAGE, 0.5), dash="dot"))
+    fig.add_hline(y=800, line=dict(color=hex_rgba(C_ACCENT, 0.5), dash="dot"))
     fig.add_trace(
         go.Scatter(
+            x=list(range(1, len(history) + 1)),
             y=history,
             mode="lines+markers",
-            line=dict(color="#636EFA", width=2),
-            name="Latency (ms)",
+            line=dict(color=C_PRIMARY, width=2),
+            fill="tozeroy",
+            fillcolor=hex_rgba(C_PRIMARY, 0.08),
         )
     )
-    fig.update_layout(
-        title="API Response Time (last 50 checks)",
-        yaxis_title="Latency (ms)",
-        xaxis_title="Check #",
-        height=300,
-        showlegend=False,
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    apply_theme(fig, height=320, xlabel="Check", ylabel="ms", showlegend=False)
+    st.plotly_chart(fig, width="stretch")
 else:
-    st.info(
-        "Latency history builds up as you keep this page open or enable auto-refresh."
-    )
+    st.info("Refresh or enable auto-refresh to build a latency history.")
 
-st.subheader("Endpoint Spot-Check")
-
-endpoints = [
-    ("GET", "/health", None, False),
-    ("GET", "/models", None, True),
+st.divider()
+section_label("Endpoint Spot Checks")
+checks = [
+    ("GET /health", timed_get("/health")),
+    ("GET /models", timed_get("/models", auth=True)),
 ]
+rows = []
+for label, result in checks:
+    rows.append(
+        {
+            "Endpoint": label,
+            "Status": result["status"],
+            "Latency ms": result["latency_ms"] or "-",
+            "Result": "PASS" if result["ok"] else "FAIL",
+        }
+    )
+st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 
-results = []
-for method, path, body, auth in endpoints:
-    h = HEADERS if auth else {}
-    t0 = time.perf_counter()
-    try:
-        if method == "GET":
-            r = httpx.get(f"{API_BASE}{path}", headers=h, timeout=5)
-        else:
-            r = httpx.post(f"{API_BASE}{path}", headers=h, json=body, timeout=5)
-        ms = round((time.perf_counter() - t0) * 1000, 1)
-        results.append(
-            {
-                "Endpoint": f"{method} {path}",
-                "Status": r.status_code,
-                "Latency (ms)": ms,
-                "OK": "✅" if r.status_code < 400 else "❌",
-            }
-        )
-    except Exception:
-        results.append(
-            {
-                "Endpoint": f"{method} {path}",
-                "Status": "Error",
-                "Latency (ms)": "—",
-                "OK": "❌",
-            }
-        )
-
-st.dataframe(pd.DataFrame(results), use_container_width=True, hide_index=True)
+st.divider()
+section_label("Configuration")
+st.dataframe(
+    pd.DataFrame(
+        [
+            {"Key": "API Base URL", "Value": API_BASE},
+            {"Key": "Auth", "Value": "X-API-Key"},
+            {"Key": "Forecast Scope", "Value": "Regional Champions Only"},
+            {"Key": "Train/Val/Test Split", "Value": "70/15/15 Chronological"},
+        ]
+    ),
+    width="stretch",
+    hide_index=True,
+)

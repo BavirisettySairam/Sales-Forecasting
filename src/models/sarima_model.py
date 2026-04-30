@@ -17,7 +17,13 @@ class SARIMAForecaster(BaseForecaster):
 
     def fit(self, train_data: pd.DataFrame, target_col: str = "total") -> None:
         cfg = self.config.get("sarima", {})
-        self._train_series = train_data[target_col].copy()
+        # Aggregate across states → one value per date (SARIMA is univariate)
+        if "date" in train_data.columns and "state" in train_data.columns and train_data["state"].nunique() > 1:
+            self._train_series = (
+                train_data.groupby("date")[target_col].sum().sort_index()
+            )
+        else:
+            self._train_series = train_data[target_col].copy()
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -33,7 +39,8 @@ class SARIMAForecaster(BaseForecaster):
                 max_q=cfg.get("max_q", 3),
                 max_P=cfg.get("max_P", 2),
                 max_Q=cfg.get("max_Q", 2),
-                D=cfg.get("D", 1),
+                seasonal_test="ch",  # Canova-Hansen: works with series length >= m (OCSB needs 3×m)
+                max_D=1,
                 trace=False,
             )
 

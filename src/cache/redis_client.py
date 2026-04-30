@@ -14,7 +14,10 @@ class RedisClient:
 
     def __init__(self) -> None:
         self.client: redis.Redis = redis.from_url(
-            settings.redis_url, decode_responses=True
+            settings.redis_url,
+            decode_responses=True,
+            socket_connect_timeout=1,
+            socket_timeout=1,
         )
         self.ttl = settings.cache_ttl_seconds
 

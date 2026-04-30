@@ -16,6 +16,7 @@ from typing import Optional
 import pandas as pd
 from loguru import logger
 
+from src.config.training import preprocessing_config
 from src.preprocessing.cleaner import clean, load_raw
 from src.preprocessing.validator import validate_clean, validate_raw
 
@@ -57,9 +58,10 @@ def run(
     # ------------------------------------------------------------------ #
     # 3. Clean
     # ------------------------------------------------------------------ #
-    fill_method = config.get("fill_method", "interpolate")
-    outlier_method = config.get("outlier_method", "iqr")
-    outlier_threshold = float(config.get("outlier_threshold", 1.5))
+    pre_cfg = preprocessing_config(config)
+    fill_method = pre_cfg.get("fill_method", "interpolate")
+    outlier_method = pre_cfg.get("outlier_method", "iqr")
+    outlier_threshold = float(pre_cfg.get("outlier_threshold", 1.5))
 
     df_clean = clean(
         df,

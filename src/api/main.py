@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from src.api.exceptions import (
     ForecastGenerationError,
@@ -78,3 +79,15 @@ app.include_router(health.router)
 app.include_router(forecast.router)
 app.include_router(models.router)
 app.include_router(retrain.router)
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    return JSONResponse({
+        "name": "Forecasting System API",
+        "version": "1.0.0",
+        "status": "ok",
+        "docs": "/docs",
+        "health": "/health",
+        "endpoints": ["/health", "/forecast", "/models", "/retrain"],
+    })

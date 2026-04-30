@@ -14,6 +14,7 @@ from src.api.rate_limiter import RateLimiter
 from src.api.schemas.request import ForecastRequest
 from src.api.schemas.response import ForecastData, ForecastPoint
 from src.cache.redis_client import RedisClient
+from src.config.training import model_config
 from src.db.models import Forecast
 from src.pipeline.registry import get_champion
 from src.utils.logger import logger
@@ -33,33 +34,28 @@ def _validate_state(state: str) -> str:
     return cleaned
 
 
-def _load_forecaster(state: str):
-    champion = get_champion()
-    if not champion:
-        champion_all = get_champion()
-        if not champion_all:
-            raise ModelNotTrainedException(state)
-    return champion
-
-
 async def _generate_forecast(state: str, weeks: int, db: Session, redis_raw) -> dict:
-    rc = RedisClient.__new__(RedisClient)
-    rc.client = redis_raw
-    rc.ttl = 86400
-    rc.prefix = "forecast"
+    # Try to serve from cache — skip silently if Redis is unavailable
+    cached = None
+    try:
+        rc = RedisClient.__new__(RedisClient)
+        rc.client = redis_raw
+        rc.ttl = 86400
+        cached = rc.get_forecast(state, weeks)
+    except Exception:
+        rc = None
 
-    cached = rc.get_forecast(state, weeks)
     if cached:
         logger.info("Cache hit", state=state, weeks=weeks)
         return cached
 
-    champion = get_champion()
+    champion = get_champion(state)
     if not champion:
         raise ModelNotTrainedException(state)
 
     model_name = champion["name"]
     model_path = champion["path"]
-    mape = champion.get("metrics", {}).get("mape", 0.0)
+    mape = (champion.get("metrics") or {}).get("mape", 0.0)
 
     import yaml
 
@@ -82,7 +78,8 @@ async def _generate_forecast(state: str, weeks: int, db: Session, redis_raw) -> 
         raise ForecastGenerationError(f"Unknown model type: {model_name}")
 
     try:
-        config = yaml.safe_load(open("config/training_config.yaml"))
+        with open("config/training_config.yaml") as f:
+            config = model_config(yaml.safe_load(f))
         forecaster = model_cls(config)
         forecaster.load(model_path)
         fc_df = forecaster.predict(weeks)
@@ -107,22 +104,30 @@ async def _generate_forecast(state: str, weeks: int, db: Session, redis_raw) -> 
         forecast=points,
     ).model_dump()
 
-    rc.set_forecast(state, weeks, data)
+    # Cache result — skip silently if Redis is unavailable
+    if rc is not None:
+        try:
+            rc.set_forecast(state, weeks, data)
+        except Exception:
+            pass
 
-    for pt in points:
-        db.add(
-            Forecast(
-                state=state,
-                model_name=model_name,
-                forecast_date=datetime.fromisoformat(pt.date).replace(
-                    tzinfo=timezone.utc
-                ),
-                predicted_value=pt.predicted_value,
-                lower_bound=pt.lower_bound,
-                upper_bound=pt.upper_bound,
+    try:
+        for pt in points:
+            db.add(
+                Forecast(
+                    state=state,
+                    model_name=model_name,
+                    forecast_date=datetime.fromisoformat(pt.date).replace(
+                        tzinfo=timezone.utc
+                    ),
+                    predicted_value=pt.predicted_value,
+                    lower_bound=pt.lower_bound,
+                    upper_bound=pt.upper_bound,
+                )
             )
-        )
-    db.commit()
+        db.commit()
+    except Exception:
+        logger.warning("Forecast DB save failed — continuing without persistence")
 
     return data
 

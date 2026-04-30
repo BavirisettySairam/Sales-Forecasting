@@ -16,3 +16,20 @@ build/
 notebooks/.ipynb_checkpoints/
 logs/
 *.log
+
+
+# Python temp
+tmp/
+.tmp/
+__pycache__/
+*.pyc
+
+# Conda / env
+env/
+venv/
+gcc_env/
+
+# OS junk
+.DS_Store
+Thumbs.db
+

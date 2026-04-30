@@ -51,8 +51,10 @@ class ProphetForecaster(BaseForecaster):
             else train_data.copy()
         )
         date_col = "date" if "date" in df.columns else df.columns[0]
-        prophet_df = df[[date_col, target_col]].rename(
-            columns={date_col: "ds", target_col: "y"}
+        # Aggregate across states → one observation per date (Prophet is univariate)
+        prophet_df = (
+            df.groupby(date_col)[target_col].sum().reset_index()
+            .rename(columns={date_col: "ds", target_col: "y"})
         )
         prophet_df["ds"] = pd.to_datetime(prophet_df["ds"])
 

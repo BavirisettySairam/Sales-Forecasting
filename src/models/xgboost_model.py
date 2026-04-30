@@ -4,6 +4,7 @@ import joblib
 import numpy as np
 import optuna
 import pandas as pd
+import torch
 import xgboost as xgb
 
 from src.features.engineering import get_feature_columns
@@ -11,6 +12,8 @@ from src.models.base import BaseForecaster
 from src.utils.logger import logger
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+_CUDA = torch.cuda.is_available()
 
 
 class XGBoostForecaster(BaseForecaster):
@@ -40,7 +43,8 @@ class XGBoostForecaster(BaseForecaster):
         df = self._ensure_feature_columns(data)
         featured = create_features(df, self.config)
         self._feature_cols = get_feature_columns(featured)
-        X = featured[self._feature_cols]  # keep DataFrame so feature names are consistent
+        # Keep DataFrame so feature names are consistent.
+        X = featured[self._feature_cols]
         y = featured[target_col].values
         return X, y
 
@@ -55,19 +59,29 @@ class XGBoostForecaster(BaseForecaster):
             "reg_lambda": trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
         }
         from sklearn.metrics import make_scorer, mean_absolute_percentage_error
-        from sklearn.model_selection import cross_val_score
+        from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 
         model = xgb.XGBRegressor(
             **params, objective="reg:squarederror", random_state=42, verbosity=0
         )
+        if len(X) < 4:
+            return float("inf")
+        tscv = TimeSeriesSplit(n_splits=min(3, len(X) - 1))
         scores = cross_val_score(
-            model, X, y, cv=3, scoring=make_scorer(mean_absolute_percentage_error)
+            model, X, y, cv=tscv, scoring=make_scorer(mean_absolute_percentage_error)
         )
         return scores.mean()
 
     def fit(self, train_data: pd.DataFrame, target_col: str = "total") -> None:
         cfg = self.config.get("xgboost", {})
         n_trials = cfg.get("n_trials", 50)
+
+        # Aggregate only when a caller intentionally fits a multi-state global model.
+        if "state" in train_data.columns and train_data["state"].nunique() > 1:
+            agg = train_data.groupby("date")[target_col].sum().reset_index()
+            agg["state"] = "national"
+            agg["category"] = "all"
+            train_data = agg
 
         X, y = self._build_Xy(train_data, target_col)
         self._last_known = train_data.copy()
@@ -85,8 +99,15 @@ class XGBoostForecaster(BaseForecaster):
         logger.info("XGBoost Optuna done", best_mape=study.best_value, params=best)
 
         alpha = cfg.get("quantile_alpha", 0.95)
+        gpu_kwargs = {"device": "cuda", "tree_method": "hist"} if _CUDA else {}
+        logger.info("XGBoost fitting final model", device="cuda" if _CUDA else "cpu")
+
         self.model = xgb.XGBRegressor(
-            **best, objective="reg:squarederror", random_state=42, verbosity=0
+            **best,
+            objective="reg:squarederror",
+            random_state=42,
+            verbosity=0,
+            **gpu_kwargs,
         )
         self.model.fit(X, y)
 
@@ -95,7 +116,8 @@ class XGBoostForecaster(BaseForecaster):
             objective="reg:quantileerror",
             quantile_alpha=1 - alpha,
             random_state=42,
-            verbosity=0
+            verbosity=0,
+            **gpu_kwargs,
         )
         self._model_lower.fit(X, y)
 
@@ -104,7 +126,8 @@ class XGBoostForecaster(BaseForecaster):
             objective="reg:quantileerror",
             quantile_alpha=alpha,
             random_state=42,
-            verbosity=0
+            verbosity=0,
+            **gpu_kwargs,
         )
         self._model_upper.fit(X, y)
 
@@ -124,6 +147,9 @@ class XGBoostForecaster(BaseForecaster):
             p = float(self.model.predict(x_row)[0])
             lo = float(self._model_lower.predict(x_row)[0])
             hi = float(self._model_upper.predict(x_row)[0])
+            lo, hi = sorted((lo, hi))
+            lo = min(lo, p)
+            hi = max(hi, p)
             preds.append(max(p, 0))
             lowers.append(max(lo, 0))
             uppers.append(max(hi, 0))

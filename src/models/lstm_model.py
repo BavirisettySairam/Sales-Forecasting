@@ -48,12 +48,27 @@ class LSTMForecaster(BaseForecaster):
 
     def fit(self, train_data: pd.DataFrame, target_col: str = "total") -> None:
         cfg = self.config.get("lstm", {})
-        series = train_data[target_col].values.reshape(-1, 1)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # Aggregate across states → one value per date (LSTM takes a single series)
+        if "date" in train_data.columns and "state" in train_data.columns and train_data["state"].nunique() > 1:
+            agg = train_data.groupby("date")[target_col].sum().sort_index()
+            series = agg.values.reshape(-1, 1)
+            self._last_date = pd.Timestamp(agg.index[-1])
+        else:
+            series = train_data[target_col].values.reshape(-1, 1)
+            if isinstance(train_data.index, pd.DatetimeIndex):
+                self._last_date = train_data.index[-1]
+            elif "date" in train_data.columns:
+                self._last_date = pd.Timestamp(train_data["date"].iloc[-1])
+            else:
+                self._last_date = None
+
         scaled = self._scaler.fit_transform(series).flatten()
 
         X, y = self._make_sequences(scaled)
-        X_t = torch.tensor(X, dtype=torch.float32).unsqueeze(-1)
-        y_t = torch.tensor(y, dtype=torch.float32).unsqueeze(-1)
+        X_t = torch.tensor(X, dtype=torch.float32).unsqueeze(-1).to(device)
+        y_t = torch.tensor(y, dtype=torch.float32).unsqueeze(-1).to(device)
 
         hidden = cfg.get("hidden_size", 64)
         layers = cfg.get("num_layers", 2)
@@ -64,13 +79,14 @@ class LSTMForecaster(BaseForecaster):
 
         net = _LSTMNet(
             input_size=1, hidden_size=hidden, num_layers=layers, dropout=dropout
-        )
+        ).to(device)
         opt = torch.optim.Adam(net.parameters(), lr=lr)
         loss_fn = nn.MSELoss()
 
         dataset = torch.utils.data.TensorDataset(X_t, y_t)
         loader = torch.utils.data.DataLoader(dataset, batch_size=batch, shuffle=True)
 
+        logger.info("LSTM training", device=str(device), epochs=epochs)
         net.train()
         for epoch in range(epochs):
             epoch_loss = 0.0
@@ -88,16 +104,10 @@ class LSTMForecaster(BaseForecaster):
                     loss=round(epoch_loss / len(loader), 5),
                 )
 
-        self.model = net
+        self.model = net.cpu()  # move back to CPU for inference/save portability
         self._last_seq = scaled[-self._seq_len :]
-        if isinstance(train_data.index, pd.DatetimeIndex):
-            self._last_date = train_data.index[-1]
-        elif "date" in train_data.columns:
-            self._last_date = pd.Timestamp(train_data["date"].iloc[-1])
-        else:
-            self._last_date = None
         self.is_fitted = True
-        logger.info("LSTM fitted", epochs=epochs, hidden=hidden)
+        logger.info("LSTM fitted", epochs=epochs, hidden=hidden, device=str(device))
 
     def predict(self, horizon: int) -> pd.DataFrame:
         if not self.is_fitted:

@@ -1,0 +1,2510 @@
+{
+  "models": [
+    {
+      "name": "sarima",
+      "version": "20260429_184608",
+      "path": "models\\sarima_20260429_184608",
+      "metrics": {
+        "mape": 5.355,
+        "rmse": 3876621582.7452,
+        "mae": 3376798003.7339,
+        "n_folds": 3
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "prophet",
+      "version": "20260429_184608",
+      "path": "models\\prophet_20260429_184608",
+      "metrics": {
+        "mape": 6.0719,
+        "rmse": 4648070637.489,
+        "mae": 3847901432.8675,
+        "n_folds": 3
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "xgboost",
+      "version": "20260429_184608",
+      "path": "models\\xgboost_20260429_184608",
+      "metrics": {
+        "mape": 5.3999,
+        "rmse": 3924368601.9955,
+        "mae": 3348644167.0701,
+        "n_folds": 3
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260429_184608",
+      "path": "models\\lightgbm_20260429_184608",
+      "metrics": {
+        "mape": 6.9046,
+        "rmse": 4663931457.9647,
+        "mae": 4272340654.0231,
+        "n_folds": 3
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "lstm",
+      "version": "20260429_184608",
+      "path": "models\\lstm_20260429_184608",
+      "metrics": {
+        "mape": 9.297,
+        "rmse": 6161246424.8665,
+        "mae": 5755012787.7132,
+        "n_folds": 3
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "sarima",
+      "version": "20260429_203402",
+      "path": "models\\sarima_20260429_203402",
+      "metrics": {
+        "mape": 5.214,
+        "rmse": 4272750367.0022,
+        "mae": 3259198411.4349,
+        "n_folds": 3,
+        "test_mape": 11.5877,
+        "test_rmse": 8325356246.1123,
+        "test_mae": 7356299752.2901
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "sarima",
+      "version": "20260429_205945",
+      "path": "models\\sarima_20260429_205945",
+      "metrics": {
+        "mape": 7.5972,
+        "rmse": 5329278326.5704,
+        "mae": 4820529789.9156,
+        "n_folds": 3,
+        "test_mape": 5.8106,
+        "test_rmse": 4621174585.068,
+        "test_mae": 3698070155.6771
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "prophet",
+      "version": "20260429_205945",
+      "path": "models\\prophet_20260429_205945",
+      "metrics": {
+        "mape": 6.2751,
+        "rmse": 4794469785.3219,
+        "mae": 3964304133.4237,
+        "n_folds": 3,
+        "test_mape": 10.3826,
+        "test_rmse": 7143484722.1374,
+        "test_mae": 6655623621.3714
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "xgboost",
+      "version": "20260429_205945",
+      "path": "models\\xgboost_20260429_205945",
+      "metrics": {
+        "mape": 6.8734,
+        "rmse": 4870021157.4093,
+        "mae": 4342452324.5393,
+        "n_folds": 3,
+        "test_mape": 3.0333,
+        "test_rmse": 2552079730.3264,
+        "test_mae": 1980713630.439
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260429_205945",
+      "path": "models\\lightgbm_20260429_205945",
+      "metrics": {
+        "mape": 9.9602,
+        "rmse": 6809323235.2417,
+        "mae": 6359537076.6678,
+        "n_folds": 3,
+        "test_mape": 7.5712,
+        "test_rmse": 5417003842.0403,
+        "test_mae": 4947522474.9521
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "lstm",
+      "version": "20260429_205945",
+      "path": "models\\lstm_20260429_205945",
+      "metrics": {
+        "mape": 11.2588,
+        "rmse": 8041485269.1289,
+        "mae": 7130471953.6209,
+        "n_folds": 3,
+        "test_mape": 7.6116,
+        "test_rmse": 5302217652.3908,
+        "test_mae": 4973543953.2199
+      },
+      "is_champion": false,
+      "state": null
+    },
+    {
+      "name": "prophet",
+      "version": "20260429_225625",
+      "path": null,
+      "metrics": {
+        "mape": 445.681,
+        "rmse": 4750978352.2086,
+        "mae": 3456755841.9455,
+        "n_folds": 3,
+        "test_mape": 7.8001,
+        "test_rmse": 121780315.0235,
+        "test_mae": 109433486.4524
+      },
+      "is_champion": false,
+      "state": "Alabama"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260429_225625",
+      "path": null,
+      "metrics": {
+        "mape": 5.4995,
+        "rmse": 64966632.0301,
+        "mae": 58807997.9446,
+        "n_folds": 3,
+        "test_mape": 3.617,
+        "test_rmse": 67778746.5536,
+        "test_mae": 52207820.3361
+      },
+      "is_champion": false,
+      "state": "Alabama"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260429_225625",
+      "path": null,
+      "metrics": {
+        "mape": 8.0076,
+        "rmse": 97694543.4037,
+        "mae": 91574667.5726,
+        "n_folds": 3,
+        "test_mape": 4.1018,
+        "test_rmse": 77290366.6361,
+        "test_mae": 59968567.2108
+      },
+      "is_champion": false,
+      "state": "Alabama"
+    },
+    {
+      "name": "lstm",
+      "version": "20260429_225625",
+      "path": "models\\lstm_alabama_20260429_225625",
+      "metrics": {
+        "mape": 5.2419,
+        "rmse": 64671456.9411,
+        "mae": 58824804.1854,
+        "n_folds": 2,
+        "test_mape": 16.6085,
+        "test_rmse": 244237982.9068,
+        "test_mae": 236367379.7777
+      },
+      "is_champion": true,
+      "state": "Alabama"
+    },
+    {
+      "name": "prophet",
+      "version": "20260429_225557",
+      "path": null,
+      "metrics": {
+        "mape": 445.681,
+        "rmse": 4750978352.2086,
+        "mae": 3456755841.9455,
+        "n_folds": 3,
+        "test_mape": 7.8001,
+        "test_rmse": 121780315.0235,
+        "test_mae": 109433486.4524
+      },
+      "is_champion": false,
+      "state": "Alabama"
+    },
+    {
+      "name": "lstm",
+      "version": "20260429_225557",
+      "path": null,
+      "metrics": {
+        "mape": 5.5054,
+        "rmse": 64703853.1151,
+        "mae": 58270465.5908,
+        "n_folds": 2,
+        "test_mape": 7.7774,
+        "test_rmse": 138403980.1402,
+        "test_mae": 107485537.2577
+      },
+      "is_champion": false,
+      "state": "Alabama"
+    },
+    {
+      "name": "sarima",
+      "version": "20260429_225557",
+      "path": null,
+      "metrics": {
+        "mape": 10.0506,
+        "rmse": 122264130.9606,
+        "mae": 116618061.8255,
+        "n_folds": 3,
+        "test_mape": 5.9823,
+        "test_rmse": 99192759.2075,
+        "test_mae": 83420649.0404
+      },
+      "is_champion": false,
+      "state": "Alabama"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260429_225557",
+      "path": null,
+      "metrics": {
+        "mape": 8.0076,
+        "rmse": 97694543.4037,
+        "mae": 91574667.5726,
+        "n_folds": 3,
+        "test_mape": 4.1018,
+        "test_rmse": 77290366.6361,
+        "test_mae": 59968567.2108
+      },
+      "is_champion": false,
+      "state": "Alabama"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260429_225557",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_alabama_20260429_225557",
+      "metrics": {
+        "mape": 5.4995,
+        "rmse": 64966632.0301,
+        "mae": 58807997.9446,
+        "n_folds": 3,
+        "test_mape": 3.617,
+        "test_rmse": 67778746.5536,
+        "test_mae": 52207820.3361
+      },
+      "is_champion": false,
+      "state": "Alabama"
+    },
+    {
+      "name": "prophet",
+      "version": "20260429_231221",
+      "path": null,
+      "metrics": {
+        "mape": 553.5007,
+        "rmse": 7624906719.5891,
+        "mae": 4571772138.8364,
+        "n_folds": 3,
+        "test_mape": 4.0135,
+        "test_rmse": 73251161.1405,
+        "test_mae": 60502550.0965
+      },
+      "is_champion": false,
+      "state": "Arizona"
+    },
+    {
+      "name": "sarima",
+      "version": "20260429_231221",
+      "path": null,
+      "metrics": {
+        "mape": 8.0569,
+        "rmse": 106993418.6223,
+        "mae": 100250991.7616,
+        "n_folds": 3,
+        "test_mape": 4.6126,
+        "test_rmse": 83486075.2178,
+        "test_mae": 71405402.8605
+      },
+      "is_champion": false,
+      "state": "Arizona"
+    },
+    {
+      "name": "lstm",
+      "version": "20260429_231221",
+      "path": null,
+      "metrics": {
+        "mape": 4.5099,
+        "rmse": 62836006.8841,
+        "mae": 49341511.9671,
+        "n_folds": 2,
+        "test_mape": 22.2861,
+        "test_rmse": 360586465.1248,
+        "test_mae": 345451649.4644
+      },
+      "is_champion": false,
+      "state": "Arizona"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260429_231221",
+      "path": null,
+      "metrics": {
+        "mape": 5.4743,
+        "rmse": 75084120.4173,
+        "mae": 66827923.236,
+        "n_folds": 3,
+        "test_mape": 7.3871,
+        "test_rmse": 131373446.3082,
+        "test_mae": 116140212.798
+      },
+      "is_champion": false,
+      "state": "Arizona"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260429_231221",
+      "path": "models\\xgboost_arizona_20260429_231221",
+      "metrics": {
+        "mape": 3.8239,
+        "rmse": 54739707.133,
+        "mae": 43891580.3826,
+        "n_folds": 3,
+        "test_mape": 9.2993,
+        "test_rmse": 159751004.6842,
+        "test_mae": 145689816.348
+      },
+      "is_champion": true,
+      "state": "Arizona"
+    },
+    {
+      "name": "prophet",
+      "version": "20260429_232354",
+      "path": null,
+      "metrics": {
+        "mape": 33.2955,
+        "rmse": 169481890.147,
+        "mae": 155496350.0786,
+        "n_folds": 3,
+        "test_mape": 6.9412,
+        "test_rmse": 61037181.3474,
+        "test_mae": 52183513.7592
+      },
+      "is_champion": false,
+      "state": "Arkansas"
+    },
+    {
+      "name": "sarima",
+      "version": "20260429_232354",
+      "path": null,
+      "metrics": {
+        "mape": 9.2895,
+        "rmse": 58789296.2677,
+        "mae": 56125322.5951,
+        "n_folds": 3,
+        "test_mape": 5.4324,
+        "test_rmse": 48914021.3415,
+        "test_mae": 40902658.3416
+      },
+      "is_champion": false,
+      "state": "Arkansas"
+    },
+    {
+      "name": "lstm",
+      "version": "20260429_232354",
+      "path": null,
+      "metrics": {
+        "mape": 10.7293,
+        "rmse": 74696787.057,
+        "mae": 69995247.7418,
+        "n_folds": 2,
+        "test_mape": 6.9912,
+        "test_rmse": 60015377.2593,
+        "test_mae": 54243247.6275
+      },
+      "is_champion": false,
+      "state": "Arkansas"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260429_232354",
+      "path": null,
+      "metrics": {
+        "mape": 8.1384,
+        "rmse": 53844874.4033,
+        "mae": 51024363.6715,
+        "n_folds": 3,
+        "test_mape": 6.0963,
+        "test_rmse": 54392152.5546,
+        "test_mae": 47431790.6831
+      },
+      "is_champion": false,
+      "state": "Arkansas"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260429_232354",
+      "path": "models\\xgboost_arkansas_20260429_232354",
+      "metrics": {
+        "mape": 5.3015,
+        "rmse": 34886396.2127,
+        "mae": 30658125.8404,
+        "n_folds": 3,
+        "test_mape": 4.3022,
+        "test_rmse": 41539987.6432,
+        "test_mae": 33527921.9977
+      },
+      "is_champion": true,
+      "state": "Arkansas"
+    },
+    {
+      "name": "prophet",
+      "version": "20260429_233555",
+      "path": null,
+      "metrics": {
+        "mape": 35.0794,
+        "rmse": 1381676231.1643,
+        "mae": 1287211419.512,
+        "n_folds": 3,
+        "test_mape": 4.2752,
+        "test_rmse": 315201926.9472,
+        "test_mae": 245557349.8805
+      },
+      "is_champion": false,
+      "state": "California"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260429_233555",
+      "path": null,
+      "metrics": {
+        "mape": 6.2129,
+        "rmse": 318374176.3378,
+        "mae": 285799126.8269,
+        "n_folds": 3,
+        "test_mape": 4.8721,
+        "test_rmse": 320491063.361,
+        "test_mae": 289289277.2154
+      },
+      "is_champion": false,
+      "state": "California"
+    },
+    {
+      "name": "sarima",
+      "version": "20260429_233555",
+      "path": null,
+      "metrics": {
+        "mape": 9.2971,
+        "rmse": 481440686.3925,
+        "mae": 457026948.5296,
+        "n_folds": 3,
+        "test_mape": 3.4002,
+        "test_rmse": 237208221.2529,
+        "test_mae": 198181853.8567
+      },
+      "is_champion": false,
+      "state": "California"
+    },
+    {
+      "name": "lstm",
+      "version": "20260429_233555",
+      "path": null,
+      "metrics": {
+        "mape": 13.3375,
+        "rmse": 692083444.7674,
+        "mae": 665725147.4921,
+        "n_folds": 2,
+        "test_mape": 5.7652,
+        "test_rmse": 371610112.2302,
+        "test_mae": 343105184.5898
+      },
+      "is_champion": false,
+      "state": "California"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260429_233555",
+      "path": "models\\lightgbm_california_20260429_233555",
+      "metrics": {
+        "mape": 5.5262,
+        "rmse": 303392019.2379,
+        "mae": 273390365.0531,
+        "n_folds": 3,
+        "test_mape": 4.0683,
+        "test_rmse": 282418031.9466,
+        "test_mae": 239184112.3637
+      },
+      "is_champion": true,
+      "state": "California"
+    },
+    {
+      "name": "prophet",
+      "version": "20260429_234439",
+      "path": null,
+      "metrics": {
+        "mape": 558.9477,
+        "rmse": 5363824248.5805,
+        "mae": 3717571829.9705,
+        "n_folds": 3,
+        "test_mape": 6.4124,
+        "test_rmse": 92481440.9081,
+        "test_mae": 76593778.6773
+      },
+      "is_champion": false,
+      "state": "Colorado"
+    },
+    {
+      "name": "sarima",
+      "version": "20260429_234439",
+      "path": null,
+      "metrics": {
+        "mape": 8.1038,
+        "rmse": 89350147.8051,
+        "mae": 82701455.5057,
+        "n_folds": 3,
+        "test_mape": 4.8759,
+        "test_rmse": 67127861.7827,
+        "test_mae": 58522708.8056
+      },
+      "is_champion": false,
+      "state": "Colorado"
+    },
+    {
+      "name": "lstm",
+      "version": "20260429_234439",
+      "path": null,
+      "metrics": {
+        "mape": 8.3831,
+        "rmse": 98560958.0443,
+        "mae": 88210087.208,
+        "n_folds": 2,
+        "test_mape": 9.5622,
+        "test_rmse": 124423455.7382,
+        "test_mae": 116824986.0847
+      },
+      "is_champion": false,
+      "state": "Colorado"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260429_234439",
+      "path": null,
+      "metrics": {
+        "mape": 7.5636,
+        "rmse": 80751454.9069,
+        "mae": 74274825.9913,
+        "n_folds": 3,
+        "test_mape": 5.5939,
+        "test_rmse": 79299125.2413,
+        "test_mae": 68803787.9009
+      },
+      "is_champion": false,
+      "state": "Colorado"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260429_234439",
+      "path": "models\\xgboost_colorado_20260429_234439",
+      "metrics": {
+        "mape": 6.3609,
+        "rmse": 64234733.1421,
+        "mae": 58071541.7972,
+        "n_folds": 3,
+        "test_mape": 3.792,
+        "test_rmse": 58022346.6051,
+        "test_mae": 45792798.7119
+      },
+      "is_champion": true,
+      "state": "Colorado"
+    },
+    {
+      "name": "prophet",
+      "version": "20260429_235722",
+      "path": null,
+      "metrics": {
+        "mape": 32.6477,
+        "rmse": 144724989.8064,
+        "mae": 129953268.4141,
+        "n_folds": 3,
+        "test_mape": 7.0375,
+        "test_rmse": 48894137.8793,
+        "test_mae": 43200784.556
+      },
+      "is_champion": false,
+      "state": "Connecticut"
+    },
+    {
+      "name": "sarima",
+      "version": "20260429_235722",
+      "path": null,
+      "metrics": {
+        "mape": 8.5971,
+        "rmse": 49754564.6609,
+        "mae": 46549027.1583,
+        "n_folds": 3,
+        "test_mape": 4.553,
+        "test_rmse": 32752807.3292,
+        "test_mae": 28541865.7139
+      },
+      "is_champion": false,
+      "state": "Connecticut"
+    },
+    {
+      "name": "lstm",
+      "version": "20260429_235722",
+      "path": null,
+      "metrics": {
+        "mape": 9.6362,
+        "rmse": 58788063.8144,
+        "mae": 53108068.7347,
+        "n_folds": 2,
+        "test_mape": 7.6269,
+        "test_rmse": 50528532.4073,
+        "test_mae": 47531204.758
+      },
+      "is_champion": false,
+      "state": "Connecticut"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260429_235722",
+      "path": null,
+      "metrics": {
+        "mape": 9.9595,
+        "rmse": 52891292.1773,
+        "mae": 49609249.6031,
+        "n_folds": 3,
+        "test_mape": 4.2781,
+        "test_rmse": 31349676.2693,
+        "test_mae": 26676370.1844
+      },
+      "is_champion": false,
+      "state": "Connecticut"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260429_235722",
+      "path": "models\\xgboost_connecticut_20260429_235722",
+      "metrics": {
+        "mape": 7.0932,
+        "rmse": 37176692.6557,
+        "mae": 34114956.1458,
+        "n_folds": 3,
+        "test_mape": 2.8725,
+        "test_rmse": 21497474.5457,
+        "test_mae": 17711071.7017
+      },
+      "is_champion": true,
+      "state": "Connecticut"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_001456",
+      "path": null,
+      "metrics": {
+        "mape": 34.3021,
+        "rmse": 1106270960.3579,
+        "mae": 1009506247.3063,
+        "n_folds": 3,
+        "test_mape": 4.3607,
+        "test_rmse": 265946766.5711,
+        "test_mae": 221775323.9082
+      },
+      "is_champion": false,
+      "state": "Florida"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_001456",
+      "path": null,
+      "metrics": {
+        "mape": 8.1713,
+        "rmse": 372518948.2621,
+        "mae": 315074034.0875,
+        "n_folds": 3,
+        "test_mape": 2.5141,
+        "test_rmse": 164358104.2379,
+        "test_mae": 130903797.7041
+      },
+      "is_champion": false,
+      "state": "Florida"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_001456",
+      "path": null,
+      "metrics": {
+        "mape": 8.6372,
+        "rmse": 379376345.6348,
+        "mae": 354446881.0714,
+        "n_folds": 3,
+        "test_mape": 3.12,
+        "test_rmse": 189160736.0536,
+        "test_mae": 158226299.189
+      },
+      "is_champion": false,
+      "state": "Florida"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_001456",
+      "path": null,
+      "metrics": {
+        "mape": 11.6507,
+        "rmse": 542067800.7619,
+        "mae": 491386556.6291,
+        "n_folds": 2,
+        "test_mape": 9.4399,
+        "test_rmse": 581625800.2299,
+        "test_mae": 478396910.2547
+      },
+      "is_champion": false,
+      "state": "Florida"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_001456",
+      "path": "models\\lightgbm_florida_20260430_001456",
+      "metrics": {
+        "mape": 7.0172,
+        "rmse": 331328369.9682,
+        "mae": 297390038.6773,
+        "n_folds": 3,
+        "test_mape": 9.0354,
+        "test_rmse": 487995338.7762,
+        "test_mae": 469484843.5119
+      },
+      "is_champion": true,
+      "state": "Florida"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_002646",
+      "path": null,
+      "metrics": {
+        "mape": 31.278,
+        "rmse": 561083386.2286,
+        "mae": 505427402.6022,
+        "n_folds": 3,
+        "test_mape": 8.8978,
+        "test_rmse": 252779562.6002,
+        "test_mae": 229998146.0273
+      },
+      "is_champion": false,
+      "state": "Georgia"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_002646",
+      "path": null,
+      "metrics": {
+        "mape": 10.0476,
+        "rmse": 226581904.2185,
+        "mae": 215406051.7156,
+        "n_folds": 3,
+        "test_mape": 6.208,
+        "test_rmse": 194304641.643,
+        "test_mae": 158811253.1345
+      },
+      "is_champion": false,
+      "state": "Georgia"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_002646",
+      "path": null,
+      "metrics": {
+        "mape": 10.203,
+        "rmse": 247378490.8003,
+        "mae": 223855157.4625,
+        "n_folds": 2,
+        "test_mape": 7.4379,
+        "test_rmse": 235791078.1,
+        "test_mae": 190108765.9013
+      },
+      "is_champion": false,
+      "state": "Georgia"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_002646",
+      "path": null,
+      "metrics": {
+        "mape": 7.8597,
+        "rmse": 181068207.4307,
+        "mae": 167862970.2932,
+        "n_folds": 3,
+        "test_mape": 3.821,
+        "test_rmse": 137274495.1875,
+        "test_mae": 102955566.5904
+      },
+      "is_champion": false,
+      "state": "Georgia"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_002646",
+      "path": "models\\xgboost_georgia_20260430_002646",
+      "metrics": {
+        "mape": 5.4363,
+        "rmse": 120782452.9017,
+        "mae": 109239416.9309,
+        "n_folds": 3,
+        "test_mape": 3.2095,
+        "test_rmse": 110863143.5658,
+        "test_mae": 85940096.0169
+      },
+      "is_champion": true,
+      "state": "Georgia"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_004106",
+      "path": null,
+      "metrics": {
+        "mape": 31.2372,
+        "rmse": 474998277.1961,
+        "mae": 422330148.3572,
+        "n_folds": 3,
+        "test_mape": 4.5241,
+        "test_rmse": 121950144.3556,
+        "test_mae": 97386787.0788
+      },
+      "is_champion": false,
+      "state": "Illinois"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_004106",
+      "path": null,
+      "metrics": {
+        "mape": 7.9785,
+        "rmse": 163578245.8405,
+        "mae": 149878674.7124,
+        "n_folds": 3,
+        "test_mape": 3.6014,
+        "test_rmse": 93131380.4326,
+        "test_mae": 77846650.8278
+      },
+      "is_champion": false,
+      "state": "Illinois"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_004106",
+      "path": null,
+      "metrics": {
+        "mape": 11.5154,
+        "rmse": 238450994.4076,
+        "mae": 220221586.9295,
+        "n_folds": 2,
+        "test_mape": 21.3644,
+        "test_rmse": 500058982.4276,
+        "test_mae": 469653198.1978
+      },
+      "is_champion": false,
+      "state": "Illinois"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_004106",
+      "path": null,
+      "metrics": {
+        "mape": 8.3499,
+        "rmse": 161630259.5349,
+        "mae": 148742662.7021,
+        "n_folds": 3,
+        "test_mape": 4.6388,
+        "test_rmse": 112484792.7501,
+        "test_mae": 102423976.3756
+      },
+      "is_champion": false,
+      "state": "Illinois"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_004106",
+      "path": "models\\xgboost_illinois_20260430_004106",
+      "metrics": {
+        "mape": 5.5426,
+        "rmse": 108996754.9383,
+        "mae": 95921196.6699,
+        "n_folds": 3,
+        "test_mape": 2.9252,
+        "test_rmse": 79315987.202,
+        "test_mae": 64340661.7277
+      },
+      "is_champion": true,
+      "state": "Illinois"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_005636",
+      "path": null,
+      "metrics": {
+        "mape": 29.7134,
+        "rmse": 318285056.1539,
+        "mae": 277024216.2452,
+        "n_folds": 3,
+        "test_mape": 4.9352,
+        "test_rmse": 90815408.3354,
+        "test_mae": 74095785.2229
+      },
+      "is_champion": false,
+      "state": "Indiana"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_005636",
+      "path": null,
+      "metrics": {
+        "mape": 8.8241,
+        "rmse": 120264726.3496,
+        "mae": 112500699.1391,
+        "n_folds": 3,
+        "test_mape": 6.6482,
+        "test_rmse": 127427319.7689,
+        "test_mae": 99580428.7098
+      },
+      "is_champion": false,
+      "state": "Indiana"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_005636",
+      "path": null,
+      "metrics": {
+        "mape": 10.8095,
+        "rmse": 158961717.2912,
+        "mae": 144941127.8266,
+        "n_folds": 2,
+        "test_mape": 7.2187,
+        "test_rmse": 136243151.7064,
+        "test_mae": 108349990.7085
+      },
+      "is_champion": false,
+      "state": "Indiana"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_005636",
+      "path": null,
+      "metrics": {
+        "mape": 7.0036,
+        "rmse": 99103531.3166,
+        "mae": 88659635.547,
+        "n_folds": 3,
+        "test_mape": 4.2677,
+        "test_rmse": 77933316.7189,
+        "test_mae": 66022712.6454
+      },
+      "is_champion": false,
+      "state": "Indiana"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_005636",
+      "path": "models\\xgboost_indiana_20260430_005636",
+      "metrics": {
+        "mape": 6.7507,
+        "rmse": 87770548.4655,
+        "mae": 82151069.9296,
+        "n_folds": 3,
+        "test_mape": 2.9315,
+        "test_rmse": 55304687.4211,
+        "test_mae": 44938163.8053
+      },
+      "is_champion": true,
+      "state": "Indiana"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_011003",
+      "path": null,
+      "metrics": {
+        "mape": 481.2286,
+        "rmse": 3254570599.6535,
+        "mae": 2120187316.7082,
+        "n_folds": 3,
+        "test_mape": 3.7407,
+        "test_rmse": 37590650.2641,
+        "test_mae": 29687206.9871
+      },
+      "is_champion": false,
+      "state": "Iowa"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_011003",
+      "path": null,
+      "metrics": {
+        "mape": 8.3129,
+        "rmse": 59657452.2376,
+        "mae": 54700177.7637,
+        "n_folds": 3,
+        "test_mape": 4.0124,
+        "test_rmse": 38070932.7775,
+        "test_mae": 32279839.4469
+      },
+      "is_champion": false,
+      "state": "Iowa"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_011003",
+      "path": null,
+      "metrics": {
+        "mape": 11.0838,
+        "rmse": 81631424.1067,
+        "mae": 75346037.345,
+        "n_folds": 2,
+        "test_mape": 4.7212,
+        "test_rmse": 46342563.4082,
+        "test_mae": 38604894.4182
+      },
+      "is_champion": false,
+      "state": "Iowa"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_011003",
+      "path": null,
+      "metrics": {
+        "mape": 6.8489,
+        "rmse": 48372388.9317,
+        "mae": 42775607.912,
+        "n_folds": 3,
+        "test_mape": 4.8409,
+        "test_rmse": 44521866.1604,
+        "test_mae": 39402562.3197
+      },
+      "is_champion": false,
+      "state": "Iowa"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_011003",
+      "path": "models\\xgboost_iowa_20260430_011003",
+      "metrics": {
+        "mape": 6.0497,
+        "rmse": 41960783.6697,
+        "mae": 37940677.5822,
+        "n_folds": 3,
+        "test_mape": 4.0771,
+        "test_rmse": 42768527.2295,
+        "test_mae": 33151945.341
+      },
+      "is_champion": true,
+      "state": "Iowa"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_011901",
+      "path": null,
+      "metrics": {
+        "mape": 217.8463,
+        "rmse": 1340785607.091,
+        "mae": 753175049.2127,
+        "n_folds": 3,
+        "test_mape": 4.986,
+        "test_rmse": 37519921.7026,
+        "test_mae": 30823432.758
+      },
+      "is_champion": false,
+      "state": "Kansas"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_011901",
+      "path": null,
+      "metrics": {
+        "mape": 8.4948,
+        "rmse": 49128667.8471,
+        "mae": 45618111.5408,
+        "n_folds": 3,
+        "test_mape": 4.0732,
+        "test_rmse": 29420435.4387,
+        "test_mae": 25371557.5244
+      },
+      "is_champion": false,
+      "state": "Kansas"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_011901",
+      "path": null,
+      "metrics": {
+        "mape": 7.2821,
+        "rmse": 43905526.8163,
+        "mae": 38707923.3313,
+        "n_folds": 2,
+        "test_mape": 9.2456,
+        "test_rmse": 62966244.7883,
+        "test_mae": 58860844.8736
+      },
+      "is_champion": false,
+      "state": "Kansas"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_011901",
+      "path": null,
+      "metrics": {
+        "mape": 7.3127,
+        "rmse": 42187071.6836,
+        "mae": 37755587.9572,
+        "n_folds": 3,
+        "test_mape": 5.8828,
+        "test_rmse": 41906656.9405,
+        "test_mae": 37483274.0559
+      },
+      "is_champion": false,
+      "state": "Kansas"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_011901",
+      "path": "models\\xgboost_kansas_20260430_011901",
+      "metrics": {
+        "mape": 4.6473,
+        "rmse": 24747813.2481,
+        "mae": 23313345.1472,
+        "n_folds": 3,
+        "test_mape": 5.414,
+        "test_rmse": 39780687.123,
+        "test_mae": 34591180.2956
+      },
+      "is_champion": true,
+      "state": "Kansas"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_013215",
+      "path": null,
+      "metrics": {
+        "mape": 42.4995,
+        "rmse": 346946471.2937,
+        "mae": 301440684.0527,
+        "n_folds": 3,
+        "test_mape": 6.5875,
+        "test_rmse": 89205831.1564,
+        "test_mae": 77465714.5886
+      },
+      "is_champion": false,
+      "state": "Kentucky"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_013215",
+      "path": null,
+      "metrics": {
+        "mape": 8.3996,
+        "rmse": 86874236.9899,
+        "mae": 80684951.7984,
+        "n_folds": 3,
+        "test_mape": 5.0271,
+        "test_rmse": 69479237.8468,
+        "test_mae": 59079195.7089
+      },
+      "is_champion": false,
+      "state": "Kentucky"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_013215",
+      "path": null,
+      "metrics": {
+        "mape": 10.6068,
+        "rmse": 121019341.5757,
+        "mae": 111322442.2181,
+        "n_folds": 2,
+        "test_mape": 10.6037,
+        "test_rmse": 158942826.6614,
+        "test_mae": 123635804.1644
+      },
+      "is_champion": false,
+      "state": "Kentucky"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_013215",
+      "path": null,
+      "metrics": {
+        "mape": 8.7361,
+        "rmse": 92029677.3081,
+        "mae": 86174948.4374,
+        "n_folds": 3,
+        "test_mape": 6.7015,
+        "test_rmse": 90332742.8826,
+        "test_mae": 81191857.99
+      },
+      "is_champion": false,
+      "state": "Kentucky"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_013215",
+      "path": "models\\xgboost_kentucky_20260430_013215",
+      "metrics": {
+        "mape": 6.7119,
+        "rmse": 72140889.6393,
+        "mae": 65245842.9295,
+        "n_folds": 3,
+        "test_mape": 3.9042,
+        "test_rmse": 58153750.9746,
+        "test_mae": 47452460.9518
+      },
+      "is_champion": true,
+      "state": "Kentucky"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_014407",
+      "path": null,
+      "metrics": {
+        "mape": 34.7975,
+        "rmse": 280389313.3261,
+        "mae": 261272477.5772,
+        "n_folds": 3,
+        "test_mape": 7.2401,
+        "test_rmse": 99846980.2331,
+        "test_mae": 89082464.3185
+      },
+      "is_champion": false,
+      "state": "Louisiana"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_014407",
+      "path": null,
+      "metrics": {
+        "mape": 6.8391,
+        "rmse": 73609633.9868,
+        "mae": 63971020.9646,
+        "n_folds": 3,
+        "test_mape": 3.5907,
+        "test_rmse": 56320227.9498,
+        "test_mae": 45594127.4338
+      },
+      "is_champion": false,
+      "state": "Louisiana"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_014407",
+      "path": null,
+      "metrics": {
+        "mape": 8.7546,
+        "rmse": 92953916.2772,
+        "mae": 87068629.9262,
+        "n_folds": 3,
+        "test_mape": 6.6602,
+        "test_rmse": 100508354.4968,
+        "test_mae": 81899544.1961
+      },
+      "is_champion": false,
+      "state": "Louisiana"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_014407",
+      "path": null,
+      "metrics": {
+        "mape": 12.8426,
+        "rmse": 142080117.9933,
+        "mae": 133979367.859,
+        "n_folds": 2,
+        "test_mape": 6.7154,
+        "test_rmse": 101133559.5085,
+        "test_mae": 82640346.9594
+      },
+      "is_champion": false,
+      "state": "Louisiana"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_014407",
+      "path": "models\\lightgbm_louisiana_20260430_014407",
+      "metrics": {
+        "mape": 6.0719,
+        "rmse": 67660964.0457,
+        "mae": 61390931.5652,
+        "n_folds": 3,
+        "test_mape": 4.052,
+        "test_rmse": 63300832.3317,
+        "test_mae": 51591653.8666
+      },
+      "is_champion": true,
+      "state": "Louisiana"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_015513",
+      "path": null,
+      "metrics": {
+        "mape": 38.23,
+        "rmse": 80228722.3114,
+        "mae": 74783506.9573,
+        "n_folds": 3,
+        "test_mape": 6.2266,
+        "test_rmse": 28790517.224,
+        "test_mae": 19798197.8334
+      },
+      "is_champion": false,
+      "state": "Maine"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_015513",
+      "path": null,
+      "metrics": {
+        "mape": 9.6941,
+        "rmse": 26295639.67,
+        "mae": 23936287.8806,
+        "n_folds": 3,
+        "test_mape": 6.0845,
+        "test_rmse": 24004836.5116,
+        "test_mae": 19343904.5812
+      },
+      "is_champion": false,
+      "state": "Maine"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_015513",
+      "path": null,
+      "metrics": {
+        "mape": 9.6486,
+        "rmse": 27159203.8446,
+        "mae": 25516808.7489,
+        "n_folds": 3,
+        "test_mape": 6.774,
+        "test_rmse": 26827376.3093,
+        "test_mae": 21527143.5724
+      },
+      "is_champion": false,
+      "state": "Maine"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_015513",
+      "path": null,
+      "metrics": {
+        "mape": 9.0517,
+        "rmse": 27919281.4097,
+        "mae": 25493177.1386,
+        "n_folds": 2,
+        "test_mape": 7.9066,
+        "test_rmse": 30173444.4237,
+        "test_mae": 25182688.5845
+      },
+      "is_champion": false,
+      "state": "Maine"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_015513",
+      "path": "models\\lightgbm_maine_20260430_015513",
+      "metrics": {
+        "mape": 5.6707,
+        "rmse": 17139296.8332,
+        "mae": 14925944.3898,
+        "n_folds": 3,
+        "test_mape": 2.7234,
+        "test_rmse": 11797319.9154,
+        "test_mae": 8779471.4592
+      },
+      "is_champion": true,
+      "state": "Maine"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_020624",
+      "path": null,
+      "metrics": {
+        "mape": 33.0383,
+        "rmse": 257570444.2844,
+        "mae": 231085732.03,
+        "n_folds": 3,
+        "test_mape": 7.9823,
+        "test_rmse": 100540524.0977,
+        "test_mae": 87704318.5724
+      },
+      "is_champion": false,
+      "state": "Maryland"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_020624",
+      "path": null,
+      "metrics": {
+        "mape": 9.3717,
+        "rmse": 94790658.0659,
+        "mae": 89508277.7459,
+        "n_folds": 3,
+        "test_mape": 7.2076,
+        "test_rmse": 92856538.7067,
+        "test_mae": 79125323.5956
+      },
+      "is_champion": false,
+      "state": "Maryland"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_020624",
+      "path": null,
+      "metrics": {
+        "mape": 11.6938,
+        "rmse": 126226270.8056,
+        "mae": 117570599.9922,
+        "n_folds": 2,
+        "test_mape": 14.761,
+        "test_rmse": 169799452.5323,
+        "test_mae": 163417133.7415
+      },
+      "is_champion": false,
+      "state": "Maryland"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_020624",
+      "path": null,
+      "metrics": {
+        "mape": 9.2744,
+        "rmse": 92104525.058,
+        "mae": 86436395.55,
+        "n_folds": 3,
+        "test_mape": 2.7263,
+        "test_rmse": 38590549.5296,
+        "test_mae": 30641247.2287
+      },
+      "is_champion": false,
+      "state": "Maryland"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_020624",
+      "path": "models\\xgboost_maryland_20260430_020624",
+      "metrics": {
+        "mape": 7.9614,
+        "rmse": 77866455.5665,
+        "mae": 70846616.9106,
+        "n_folds": 3,
+        "test_mape": 2.1144,
+        "test_rmse": 30798225.178,
+        "test_mae": 23360082.1705
+      },
+      "is_champion": true,
+      "state": "Maryland"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_021906",
+      "path": null,
+      "metrics": {
+        "mape": 33.5017,
+        "rmse": 288049528.7974,
+        "mae": 260473028.0565,
+        "n_folds": 3,
+        "test_mape": 4.4725,
+        "test_rmse": 67796377.7661,
+        "test_mae": 56195275.9748
+      },
+      "is_champion": false,
+      "state": "Massachusetts"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_021906",
+      "path": null,
+      "metrics": {
+        "mape": 9.8238,
+        "rmse": 109367457.1414,
+        "mae": 103358404.0233,
+        "n_folds": 3,
+        "test_mape": 4.1474,
+        "test_rmse": 61290543.23,
+        "test_mae": 53144811.938
+      },
+      "is_champion": false,
+      "state": "Massachusetts"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_021906",
+      "path": null,
+      "metrics": {
+        "mape": 12.334,
+        "rmse": 144348052.9756,
+        "mae": 136315895.2437,
+        "n_folds": 2,
+        "test_mape": 11.0291,
+        "test_rmse": 144193990.1864,
+        "test_mae": 139983346.1858
+      },
+      "is_champion": false,
+      "state": "Massachusetts"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_021906",
+      "path": null,
+      "metrics": {
+        "mape": 8.7369,
+        "rmse": 94973686.6231,
+        "mae": 89029791.1376,
+        "n_folds": 3,
+        "test_mape": 4.99,
+        "test_rmse": 74587796.7581,
+        "test_mae": 63885551.93
+      },
+      "is_champion": false,
+      "state": "Massachusetts"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_021906",
+      "path": "models\\xgboost_massachusetts_20260430_021906",
+      "metrics": {
+        "mape": 6.6522,
+        "rmse": 72687935.9493,
+        "mae": 66846030.6153,
+        "n_folds": 3,
+        "test_mape": 2.7004,
+        "test_rmse": 43410641.3148,
+        "test_mae": 34607504.9142
+      },
+      "is_champion": true,
+      "state": "Massachusetts"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_023200",
+      "path": null,
+      "metrics": {
+        "mape": 34.3139,
+        "rmse": 465962647.5144,
+        "mae": 426039864.2186,
+        "n_folds": 3,
+        "test_mape": 4.1831,
+        "test_rmse": 105104089.9398,
+        "test_mae": 82445926.0215
+      },
+      "is_champion": false,
+      "state": "Michigan"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_023200",
+      "path": null,
+      "metrics": {
+        "mape": 8.7438,
+        "rmse": 149838756.607,
+        "mae": 142474990.3264,
+        "n_folds": 3,
+        "test_mape": 2.7539,
+        "test_rmse": 64375059.3118,
+        "test_mae": 54588330.0216
+      },
+      "is_champion": false,
+      "state": "Michigan"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_023200",
+      "path": null,
+      "metrics": {
+        "mape": 7.5806,
+        "rmse": 146455953.664,
+        "mae": 133808533.1908,
+        "n_folds": 3,
+        "test_mape": 5.9421,
+        "test_rmse": 148136579.4349,
+        "test_mae": 116698272.8647
+      },
+      "is_champion": false,
+      "state": "Michigan"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_023200",
+      "path": null,
+      "metrics": {
+        "mape": 8.3379,
+        "rmse": 168229184.6208,
+        "mae": 150922363.6226,
+        "n_folds": 2,
+        "test_mape": 6.7583,
+        "test_rmse": 147244059.9651,
+        "test_mae": 136494814.2478
+      },
+      "is_champion": false,
+      "state": "Michigan"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_023200",
+      "path": "models\\lightgbm_michigan_20260430_023200",
+      "metrics": {
+        "mape": 6.878,
+        "rmse": 130809043.487,
+        "mae": 115811460.6587,
+        "n_folds": 3,
+        "test_mape": 3.1885,
+        "test_rmse": 78545046.1234,
+        "test_mae": 64097164.7369
+      },
+      "is_champion": true,
+      "state": "Michigan"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_024205",
+      "path": null,
+      "metrics": {
+        "mape": 36.0791,
+        "rmse": 257959447.7268,
+        "mae": 238439693.2791,
+        "n_folds": 3,
+        "test_mape": 3.7389,
+        "test_rmse": 52210232.7877,
+        "test_mae": 39862284.6405
+      },
+      "is_champion": false,
+      "state": "Minnesota"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_024205",
+      "path": null,
+      "metrics": {
+        "mape": 7.7509,
+        "rmse": 78445106.653,
+        "mae": 71720181.3015,
+        "n_folds": 3,
+        "test_mape": 3.9943,
+        "test_rmse": 50995674.6483,
+        "test_mae": 43234190.1166
+      },
+      "is_champion": false,
+      "state": "Minnesota"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_024205",
+      "path": null,
+      "metrics": {
+        "mape": 9.5767,
+        "rmse": 101284293.5612,
+        "mae": 89478487.4369,
+        "n_folds": 2,
+        "test_mape": 9.2818,
+        "test_rmse": 128381570.5455,
+        "test_mae": 98656624.263
+      },
+      "is_champion": false,
+      "state": "Minnesota"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_024205",
+      "path": null,
+      "metrics": {
+        "mape": 6.9082,
+        "rmse": 68913566.5093,
+        "mae": 60035016.308,
+        "n_folds": 3,
+        "test_mape": 2.9574,
+        "test_rmse": 41472677.7102,
+        "test_mae": 31933568.5707
+      },
+      "is_champion": false,
+      "state": "Minnesota"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_024205",
+      "path": "models\\xgboost_minnesota_20260430_024205",
+      "metrics": {
+        "mape": 6.2293,
+        "rmse": 66677768.459,
+        "mae": 58121898.842,
+        "n_folds": 3,
+        "test_mape": 3.4041,
+        "test_rmse": 51427485.8064,
+        "test_mae": 37533623.8125
+      },
+      "is_champion": true,
+      "state": "Minnesota"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_025131",
+      "path": null,
+      "metrics": {
+        "mape": 33.6512,
+        "rmse": 126430045.2475,
+        "mae": 112060173.2808,
+        "n_folds": 3,
+        "test_mape": 3.0717,
+        "test_rmse": 37941611.9718,
+        "test_mae": 25746942.7234
+      },
+      "is_champion": false,
+      "state": "Mississippi"
+    },
+    {
+      "name": "sarima",
+      "version": "20260430_025131",
+      "path": null,
+      "metrics": {
+        "mape": 6.4647,
+        "rmse": 41577787.3985,
+        "mae": 35357704.0354,
+        "n_folds": 3,
+        "test_mape": 6.2374,
+        "test_rmse": 65650685.5284,
+        "test_mae": 52179476.843
+      },
+      "is_champion": false,
+      "state": "Mississippi"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_025131",
+      "path": null,
+      "metrics": {
+        "mape": 4.4465,
+        "rmse": 39873365.2692,
+        "mae": 26773505.2573,
+        "n_folds": 2,
+        "test_mape": 19.4705,
+        "test_rmse": 174646427.6238,
+        "test_mae": 166971231.4462
+      },
+      "is_champion": false,
+      "state": "Mississippi"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_025131",
+      "path": null,
+      "metrics": {
+        "mape": 4.3038,
+        "rmse": 28772958.4013,
+        "mae": 21023145.5622,
+        "n_folds": 3,
+        "test_mape": 3.706,
+        "test_rmse": 45564447.2714,
+        "test_mae": 30948979.4413
+      },
+      "is_champion": false,
+      "state": "Mississippi"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_025131",
+      "path": "models\\xgboost_mississippi_20260430_025131",
+      "metrics": {
+        "mape": 3.4333,
+        "rmse": 25832562.921,
+        "mae": 17806587.9426,
+        "n_folds": 3,
+        "test_mape": 3.0369,
+        "test_rmse": 36120743.0536,
+        "test_mae": 26699596.3916
+      },
+      "is_champion": true,
+      "state": "Mississippi"
+    },
+    {
+      "name": "lstm",
+      "version": "20260430_032613",
+      "path": null,
+      "metrics": {
+        "mape": 15.0497,
+        "rmse": 131240337.3135,
+        "mae": 127606333.6725,
+        "n_folds": 2,
+        "test_mape": 4.6979,
+        "test_rmse": 71784787.9301,
+        "test_mae": 61009102.4488
+      },
+      "is_champion": false,
+      "state": "Washington"
+    },
+    {
+      "name": "lightgbm",
+      "version": "20260430_032613",
+      "path": null,
+      "metrics": {
+        "mape": 12.3542,
+        "rmse": 133997246.0028,
+        "mae": 115496776.492,
+        "n_folds": 1,
+        "test_mape": 3.8871,
+        "test_rmse": 65543204.1711,
+        "test_mae": 51524083.9694
+      },
+      "is_champion": false,
+      "state": "Washington"
+    },
+    {
+      "name": "prophet",
+      "version": "20260430_032613",
+      "path": "models\\prophet_washington_20260430_032613",
+      "metrics": {
+        "mape": 5.0171,
+        "rmse": 58835986.088,
+        "mae": 46996517.0355,
+        "n_folds": 1,
+        "test_mape": 3.9266,
+        "test_rmse": 63738032.9575,
+        "test_mae": 50669742.9352
+      },
+      "is_champion": true,
+      "state": "Washington"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_035610",
+      "path": null,
+      "metrics": {
+        "mape": 4.0232,
+        "rmse": 45967219.7083,
+        "mae": 36117783.6382,
+        "n_folds": 2,
+        "test_mape": 3.2129,
+        "test_rmse": 55912741.5207,
+        "test_mae": 43112033.7801
+      },
+      "is_champion": false,
+      "state": "Missouri"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_035613",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_nevada_20260430_035613",
+      "metrics": {
+        "mape": 7.4612,
+        "rmse": 39146252.0243,
+        "mae": 32853126.4854,
+        "n_folds": 2,
+        "test_mape": 4.4278,
+        "test_rmse": 40863193.5562,
+        "test_mae": 31704145.0598
+      },
+      "is_champion": true,
+      "state": "Nevada"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_035610",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_nebraska_20260430_035610",
+      "metrics": {
+        "mape": 2.6056,
+        "rmse": 9718823.4189,
+        "mae": 6964195.9569,
+        "n_folds": 2,
+        "test_mape": 6.0821,
+        "test_rmse": 31168620.903,
+        "test_mae": 26913587.1895
+      },
+      "is_champion": true,
+      "state": "Nebraska"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_035731",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_new_hampshire_20260430_035731",
+      "metrics": {
+        "mape": 4.1149,
+        "rmse": 12979020.8715,
+        "mae": 11201331.5951,
+        "n_folds": 2,
+        "test_mape": 2.6528,
+        "test_rmse": 13038684.3437,
+        "test_mae": 10176984.4013
+      },
+      "is_champion": true,
+      "state": "New Hampshire"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_035732",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_new_mexico_20260430_035732",
+      "metrics": {
+        "mape": 4.4982,
+        "rmse": 17535553.5179,
+        "mae": 14937060.0569,
+        "n_folds": 2,
+        "test_mape": 4.6021,
+        "test_rmse": 30653195.2221,
+        "test_mae": 23686710.861
+      },
+      "is_champion": true,
+      "state": "New Mexico"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_035733",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_new_york_20260430_035733",
+      "metrics": {
+        "mape": 2.9711,
+        "rmse": 79709179.6827,
+        "mae": 60995347.5007,
+        "n_folds": 2,
+        "test_mape": 2.0357,
+        "test_rmse": 81517344.1677,
+        "test_mae": 61069218.8013
+      },
+      "is_champion": true,
+      "state": "New York"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_035852",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_north_carolina_20260430_035852",
+      "metrics": {
+        "mape": 3.9549,
+        "rmse": 72918009.618,
+        "mae": 61112782.8167,
+        "n_folds": 2,
+        "test_mape": 2.679,
+        "test_rmse": 78598076.0182,
+        "test_mae": 66253799.4319
+      },
+      "is_champion": true,
+      "state": "North Carolina"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_035855",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_ohio_20260430_035855",
+      "metrics": {
+        "mape": 3.9239,
+        "rmse": 75193131.9366,
+        "mae": 65798205.8535,
+        "n_folds": 2,
+        "test_mape": 3.2527,
+        "test_rmse": 104034215.6613,
+        "test_mae": 83976065.6537
+      },
+      "is_champion": true,
+      "state": "Ohio"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_035857",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_oklahoma_20260430_035857",
+      "metrics": {
+        "mape": 4.8003,
+        "rmse": 42415122.8251,
+        "mae": 33051034.3271,
+        "n_folds": 2,
+        "test_mape": 6.348,
+        "test_rmse": 76784664.2924,
+        "test_mae": 65968391.1043
+      },
+      "is_champion": true,
+      "state": "Oklahoma"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040013",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_oregon_20260430_040013",
+      "metrics": {
+        "mape": 4.3704,
+        "rmse": 26977201.2701,
+        "mae": 23948524.5604,
+        "n_folds": 2,
+        "test_mape": 2.9731,
+        "test_rmse": 29760861.3714,
+        "test_mae": 23601945.4566
+      },
+      "is_champion": true,
+      "state": "Oregon"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040017",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_pennsylvania_20260430_040017",
+      "metrics": {
+        "mape": 3.7396,
+        "rmse": 73347221.9261,
+        "mae": 60943262.6327,
+        "n_folds": 2,
+        "test_mape": 2.2964,
+        "test_rmse": 74731790.4344,
+        "test_mae": 56390094.1756
+      },
+      "is_champion": true,
+      "state": "Pennsylvania"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040021",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_rhode_island_20260430_040021",
+      "metrics": {
+        "mape": 4.2752,
+        "rmse": 6178247.4208,
+        "mae": 5305438.0389,
+        "n_folds": 2,
+        "test_mape": 3.1566,
+        "test_rmse": 6679688.3695,
+        "test_mae": 5841678.0515
+      },
+      "is_champion": true,
+      "state": "Rhode Island"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040144",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_south_dakota_20260430_040144",
+      "metrics": {
+        "mape": 3.4866,
+        "rmse": 5894656.4518,
+        "mae": 4790231.8924,
+        "n_folds": 2,
+        "test_mape": 6.1366,
+        "test_rmse": 15977016.5755,
+        "test_mae": 11843184.6775
+      },
+      "is_champion": true,
+      "state": "South Dakota"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040138",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_south_carolina_20260430_040138",
+      "metrics": {
+        "mape": 5.138,
+        "rmse": 51420183.2705,
+        "mae": 44035054.9958,
+        "n_folds": 2,
+        "test_mape": 7.8847,
+        "test_rmse": 115654527.6461,
+        "test_mae": 107440398.7521
+      },
+      "is_champion": true,
+      "state": "South Carolina"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040147",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_tennessee_20260430_040147",
+      "metrics": {
+        "mape": 7.2375,
+        "rmse": 94779748.5939,
+        "mae": 85324092.9896,
+        "n_folds": 2,
+        "test_mape": 3.3939,
+        "test_rmse": 77293262.6001,
+        "test_mae": 61874339.4536
+      },
+      "is_champion": true,
+      "state": "Tennessee"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040307",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_texas_20260430_040307",
+      "metrics": {
+        "mape": 5.3171,
+        "rmse": 254478953.1969,
+        "mae": 214688564.6243,
+        "n_folds": 2,
+        "test_mape": 3.3946,
+        "test_rmse": 265386868.6676,
+        "test_mae": 211992513.0836
+      },
+      "is_champion": true,
+      "state": "Texas"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040308",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_utah_20260430_040308",
+      "metrics": {
+        "mape": 3.9818,
+        "rmse": 17963709.5834,
+        "mae": 15953323.1479,
+        "n_folds": 2,
+        "test_mape": 3.65,
+        "test_rmse": 29694456.0623,
+        "test_mae": 21300160.7634
+      },
+      "is_champion": true,
+      "state": "Utah"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040316",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_vermont_20260430_040316",
+      "metrics": {
+        "mape": 4.2206,
+        "rmse": 4617930.5895,
+        "mae": 3746354.225,
+        "n_folds": 2,
+        "test_mape": 2.447,
+        "test_rmse": 3759687.3986,
+        "test_mae": 3141560.8474
+      },
+      "is_champion": true,
+      "state": "Vermont"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040431",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_virginia_20260430_040431",
+      "metrics": {
+        "mape": 5.4651,
+        "rmse": 83962050.4927,
+        "mae": 72238312.1847,
+        "n_folds": 2,
+        "test_mape": 2.9411,
+        "test_rmse": 73505573.1559,
+        "test_mae": 59590801.7523
+      },
+      "is_champion": true,
+      "state": "Virginia"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040435",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_west_virginia_20260430_040435",
+      "metrics": {
+        "mape": 4.843,
+        "rmse": 21204645.4637,
+        "mae": 16293946.8166,
+        "n_folds": 2,
+        "test_mape": 8.7731,
+        "test_rmse": 50927282.6643,
+        "test_mae": 46607960.3077
+      },
+      "is_champion": true,
+      "state": "West Virginia"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040442",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_wisconsin_20260430_040442",
+      "metrics": {
+        "mape": 3.709,
+        "rmse": 36404138.2847,
+        "mae": 28135037.2507,
+        "n_folds": 2,
+        "test_mape": 3.4335,
+        "test_rmse": 46837175.9855,
+        "test_mae": 37045225.6753
+      },
+      "is_champion": true,
+      "state": "Wisconsin"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_040555",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_wyoming_20260430_040555",
+      "metrics": {
+        "mape": 3.6418,
+        "rmse": 4355865.8988,
+        "mae": 3774579.4479,
+        "n_folds": 2,
+        "test_mape": 8.8892,
+        "test_rmse": 14701699.313,
+        "test_mae": 13022285.0427
+      },
+      "is_champion": true,
+      "state": "Wyoming"
+    },
+    {
+      "name": "xgboost",
+      "version": "20260430_041155",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_missouri_20260430_041155",
+      "metrics": {
+        "mape": 4.0232,
+        "rmse": 45967219.7083,
+        "mae": 36117783.6382,
+        "n_folds": 2,
+        "test_mape": 3.2129,
+        "test_rmse": 55912741.5207,
+        "test_mae": 43112033.7801
+      },
+      "is_champion": true,
+      "state": "Missouri"
+    }
+  ],
+  "champion": {
+    "name": "prophet",
+    "version": "20260429_205945",
+    "path": "models\\prophet_20260429_205945"
+  },
+  "champions": {
+    "Alabama": {
+      "name": "lstm",
+      "version": "20260429_225625",
+      "path": "models\\lstm_alabama_20260429_225625",
+      "state": "Alabama"
+    },
+    "Arizona": {
+      "name": "xgboost",
+      "version": "20260429_231221",
+      "path": "models\\xgboost_arizona_20260429_231221",
+      "state": "Arizona"
+    },
+    "Arkansas": {
+      "name": "xgboost",
+      "version": "20260429_232354",
+      "path": "models\\xgboost_arkansas_20260429_232354",
+      "state": "Arkansas"
+    },
+    "California": {
+      "name": "lightgbm",
+      "version": "20260429_233555",
+      "path": "models\\lightgbm_california_20260429_233555",
+      "state": "California"
+    },
+    "Colorado": {
+      "name": "xgboost",
+      "version": "20260429_234439",
+      "path": "models\\xgboost_colorado_20260429_234439",
+      "state": "Colorado"
+    },
+    "Connecticut": {
+      "name": "xgboost",
+      "version": "20260429_235722",
+      "path": "models\\xgboost_connecticut_20260429_235722",
+      "state": "Connecticut"
+    },
+    "Florida": {
+      "name": "lightgbm",
+      "version": "20260430_001456",
+      "path": "models\\lightgbm_florida_20260430_001456",
+      "state": "Florida"
+    },
+    "Georgia": {
+      "name": "xgboost",
+      "version": "20260430_002646",
+      "path": "models\\xgboost_georgia_20260430_002646",
+      "state": "Georgia"
+    },
+    "Illinois": {
+      "name": "xgboost",
+      "version": "20260430_004106",
+      "path": "models\\xgboost_illinois_20260430_004106",
+      "state": "Illinois"
+    },
+    "Indiana": {
+      "name": "xgboost",
+      "version": "20260430_005636",
+      "path": "models\\xgboost_indiana_20260430_005636",
+      "state": "Indiana"
+    },
+    "Iowa": {
+      "name": "xgboost",
+      "version": "20260430_011003",
+      "path": "models\\xgboost_iowa_20260430_011003",
+      "state": "Iowa"
+    },
+    "Kansas": {
+      "name": "xgboost",
+      "version": "20260430_011901",
+      "path": "models\\xgboost_kansas_20260430_011901",
+      "state": "Kansas"
+    },
+    "Kentucky": {
+      "name": "xgboost",
+      "version": "20260430_013215",
+      "path": "models\\xgboost_kentucky_20260430_013215",
+      "state": "Kentucky"
+    },
+    "Louisiana": {
+      "name": "lightgbm",
+      "version": "20260430_014407",
+      "path": "models\\lightgbm_louisiana_20260430_014407",
+      "state": "Louisiana"
+    },
+    "Maine": {
+      "name": "lightgbm",
+      "version": "20260430_015513",
+      "path": "models\\lightgbm_maine_20260430_015513",
+      "state": "Maine"
+    },
+    "Maryland": {
+      "name": "xgboost",
+      "version": "20260430_020624",
+      "path": "models\\xgboost_maryland_20260430_020624",
+      "state": "Maryland"
+    },
+    "Massachusetts": {
+      "name": "xgboost",
+      "version": "20260430_021906",
+      "path": "models\\xgboost_massachusetts_20260430_021906",
+      "state": "Massachusetts"
+    },
+    "Michigan": {
+      "name": "lightgbm",
+      "version": "20260430_023200",
+      "path": "models\\lightgbm_michigan_20260430_023200",
+      "state": "Michigan"
+    },
+    "Minnesota": {
+      "name": "xgboost",
+      "version": "20260430_024205",
+      "path": "models\\xgboost_minnesota_20260430_024205",
+      "state": "Minnesota"
+    },
+    "Mississippi": {
+      "name": "xgboost",
+      "version": "20260430_025131",
+      "path": "models\\xgboost_mississippi_20260430_025131",
+      "state": "Mississippi"
+    },
+    "Washington": {
+      "name": "prophet",
+      "version": "20260430_032613",
+      "path": "models\\prophet_washington_20260430_032613",
+      "state": "Washington"
+    },
+    "Nevada": {
+      "name": "xgboost",
+      "version": "20260430_035613",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_nevada_20260430_035613",
+      "state": "Nevada"
+    },
+    "Nebraska": {
+      "name": "xgboost",
+      "version": "20260430_035610",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_nebraska_20260430_035610",
+      "state": "Nebraska"
+    },
+    "New Hampshire": {
+      "name": "xgboost",
+      "version": "20260430_035731",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_new_hampshire_20260430_035731",
+      "state": "New Hampshire"
+    },
+    "New Mexico": {
+      "name": "xgboost",
+      "version": "20260430_035732",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_new_mexico_20260430_035732",
+      "state": "New Mexico"
+    },
+    "New York": {
+      "name": "xgboost",
+      "version": "20260430_035733",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_new_york_20260430_035733",
+      "state": "New York"
+    },
+    "North Carolina": {
+      "name": "xgboost",
+      "version": "20260430_035852",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_north_carolina_20260430_035852",
+      "state": "North Carolina"
+    },
+    "Ohio": {
+      "name": "xgboost",
+      "version": "20260430_035855",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_ohio_20260430_035855",
+      "state": "Ohio"
+    },
+    "Oklahoma": {
+      "name": "xgboost",
+      "version": "20260430_035857",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_oklahoma_20260430_035857",
+      "state": "Oklahoma"
+    },
+    "Oregon": {
+      "name": "xgboost",
+      "version": "20260430_040013",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_oregon_20260430_040013",
+      "state": "Oregon"
+    },
+    "Pennsylvania": {
+      "name": "xgboost",
+      "version": "20260430_040017",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_pennsylvania_20260430_040017",
+      "state": "Pennsylvania"
+    },
+    "Rhode Island": {
+      "name": "xgboost",
+      "version": "20260430_040021",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_rhode_island_20260430_040021",
+      "state": "Rhode Island"
+    },
+    "South Dakota": {
+      "name": "xgboost",
+      "version": "20260430_040144",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_south_dakota_20260430_040144",
+      "state": "South Dakota"
+    },
+    "South Carolina": {
+      "name": "xgboost",
+      "version": "20260430_040138",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_south_carolina_20260430_040138",
+      "state": "South Carolina"
+    },
+    "Tennessee": {
+      "name": "xgboost",
+      "version": "20260430_040147",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_tennessee_20260430_040147",
+      "state": "Tennessee"
+    },
+    "Texas": {
+      "name": "xgboost",
+      "version": "20260430_040307",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_texas_20260430_040307",
+      "state": "Texas"
+    },
+    "Utah": {
+      "name": "xgboost",
+      "version": "20260430_040308",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_utah_20260430_040308",
+      "state": "Utah"
+    },
+    "Vermont": {
+      "name": "xgboost",
+      "version": "20260430_040316",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_vermont_20260430_040316",
+      "state": "Vermont"
+    },
+    "Virginia": {
+      "name": "xgboost",
+      "version": "20260430_040431",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_virginia_20260430_040431",
+      "state": "Virginia"
+    },
+    "West Virginia": {
+      "name": "xgboost",
+      "version": "20260430_040435",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_west_virginia_20260430_040435",
+      "state": "West Virginia"
+    },
+    "Wisconsin": {
+      "name": "xgboost",
+      "version": "20260430_040442",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_wisconsin_20260430_040442",
+      "state": "Wisconsin"
+    },
+    "Wyoming": {
+      "name": "xgboost",
+      "version": "20260430_040555",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_wyoming_20260430_040555",
+      "state": "Wyoming"
+    },
+    "Missouri": {
+      "name": "xgboost",
+      "version": "20260430_041155",
+      "path": "D:\\Professional\\microgcc\\models\\xgboost_missouri_20260430_041155",
+      "state": "Missouri"
+    }
+  }
+}
