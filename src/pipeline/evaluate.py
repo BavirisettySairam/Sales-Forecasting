@@ -8,11 +8,11 @@ from src.utils.logger import logger
 
 def train_val_test_split(
     data: pd.DataFrame,
-    train_frac: float = 0.6,
-    val_frac: float = 0.2,
+    train_frac: float = 0.70,
+    val_frac: float = 0.15,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Chronological 6:2:2 split by unique calendar dates (not row index).
+    Chronological 70:15:15 split by unique calendar dates (not row index).
     Returns (train_df, val_df, test_df).
     Multi-state data is split by date so all states are represented in each fold.
     """
@@ -31,7 +31,7 @@ def train_val_test_split(
     test = data[data["date"] > val_cutoff].copy()
 
     logger.info(
-        "6:2:2 split",
+        "70:15:15 split",
         train_dates=len(data[data["date"] <= train_cutoff]["date"].unique()),
         val_dates=len(val["date"].unique()),
         test_dates=len(test["date"].unique()),

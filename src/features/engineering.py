@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
+from src.config.training import feature_config
+
 # ---------------------------------------------------------------------------
 # Individual feature groups
 # ---------------------------------------------------------------------------
@@ -59,10 +61,23 @@ def _add_holiday_features(grp: pd.DataFrame, country: str = "US") -> pd.DataFram
     """
     US holiday flags and days-to/from nearest holiday.
     Computed once for the full date range in the group.
+    Falls back to zero-flags if the holidays package internals fail.
     """
     years = grp["date"].dt.year.unique().tolist()
-    us_holidays = hol.country_holidays(country, years=years)
-    holiday_dates = pd.to_datetime(sorted(us_holidays.keys()))
+    try:
+        us_holidays = hol.country_holidays(country, years=years)
+        holiday_dates = pd.to_datetime(sorted(us_holidays.keys()))
+    except Exception:
+        try:
+            # Older / alternative holidays API
+            cls = getattr(hol, country, None)
+            us_holidays = cls(years=years) if cls else {}
+            holiday_dates = pd.to_datetime(sorted(us_holidays.keys()))
+        except Exception:
+            grp["is_holiday"] = 0
+            grp["days_to_next_holiday"] = 365
+            grp["days_from_last_holiday"] = 365
+            return grp
 
     def _days_to_next(d: pd.Timestamp) -> int:
         future = holiday_dates[holiday_dates >= d]
@@ -103,10 +118,11 @@ def create_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
       - NaN rows from warm-up period are NOT dropped here; training code
         drops them only from the training split, keeping test rows intact
     """
-    lag_periods: list[int] = config.get("lag_periods", [1, 7, 14, 30])
-    rolling_windows: list[int] = config.get("rolling_windows", [7, 14, 30])
-    rolling_stats: list[str] = config.get("rolling_stats", ["mean", "std"])
-    holiday_country: str = config.get("holiday_country", "US")
+    cfg = feature_config(config)
+    lag_periods: list[int] = cfg.get("lag_periods", [1, 7, 14, 30])
+    rolling_windows: list[int] = cfg.get("rolling_windows", [7, 14, 30])
+    rolling_stats: list[str] = cfg.get("rolling_stats", ["mean", "std"])
+    holiday_country: str = cfg.get("holiday_country", "US")
 
     logger.info(
         f"[Features] Building features | lags={lag_periods} | "

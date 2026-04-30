@@ -43,7 +43,8 @@ class LightGBMForecaster(BaseForecaster):
         df = self._ensure_feature_columns(data)
         featured = create_features(df, self.config)
         self._feature_cols = get_feature_columns(featured)
-        X = featured[self._feature_cols]  # keep DataFrame so feature names are consistent
+        # Keep DataFrame so feature names are consistent.
+        X = featured[self._feature_cols]
         y = featured[target_col].values
         return X, y
 
@@ -59,15 +60,22 @@ class LightGBMForecaster(BaseForecaster):
             "num_leaves": trial.suggest_int("num_leaves", 20, 100),
         }
         from sklearn.metrics import make_scorer, mean_absolute_percentage_error
-        from sklearn.model_selection import cross_val_score
+        from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 
         model = lgb.LGBMRegressor(
             **params, objective="regression", random_state=42, verbose=-1
         )
+        if len(X) < 4:
+            return float("inf")
+        tscv = TimeSeriesSplit(n_splits=min(3, len(X) - 1))
         # Use .values so sklearn's internal splits don't trigger feature-name warnings
         X_arr = X.values if hasattr(X, "values") else X
         scores = cross_val_score(
-            model, X_arr, y, cv=3, scoring=make_scorer(mean_absolute_percentage_error)
+            model,
+            X_arr,
+            y,
+            cv=tscv,
+            scoring=make_scorer(mean_absolute_percentage_error),
         )
         return scores.mean()
 
@@ -75,7 +83,7 @@ class LightGBMForecaster(BaseForecaster):
         cfg = self.config.get("lightgbm", {})
         n_trials = cfg.get("n_trials", 50)
 
-        # Aggregate across states if multi-state — keeps predict() output comparable to national actuals
+        # Aggregate only when a caller intentionally fits a multi-state global model.
         if "state" in train_data.columns and train_data["state"].nunique() > 1:
             agg = train_data.groupby("date")[target_col].sum().reset_index()
             agg["state"] = "national"
@@ -107,12 +115,22 @@ class LightGBMForecaster(BaseForecaster):
         self.model.fit(X, y)
 
         self._model_lower = lgb.LGBMRegressor(
-            **best, objective="quantile", alpha=1 - alpha, random_state=42, verbose=-1, **gpu_kwargs
+            **best,
+            objective="quantile",
+            alpha=1 - alpha,
+            random_state=42,
+            verbose=-1,
+            **gpu_kwargs,
         )
         self._model_lower.fit(X, y)
 
         self._model_upper = lgb.LGBMRegressor(
-            **best, objective="quantile", alpha=alpha, random_state=42, verbose=-1, **gpu_kwargs
+            **best,
+            objective="quantile",
+            alpha=alpha,
+            random_state=42,
+            verbose=-1,
+            **gpu_kwargs,
         )
         self._model_upper.fit(X, y)
 
@@ -132,6 +150,9 @@ class LightGBMForecaster(BaseForecaster):
             p = float(self.model.predict(x_row)[0])
             lo = float(self._model_lower.predict(x_row)[0])
             hi = float(self._model_upper.predict(x_row)[0])
+            lo, hi = sorted((lo, hi))
+            lo = min(lo, p)
+            hi = max(hi, p)
             preds.append(max(p, 0))
             lowers.append(max(lo, 0))
             uppers.append(max(hi, 0))

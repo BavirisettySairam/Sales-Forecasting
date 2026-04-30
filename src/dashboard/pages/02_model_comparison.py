@@ -1,4 +1,5 @@
 import os
+import sys
 
 import httpx
 import pandas as pd
@@ -6,135 +7,216 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from theme import (  # noqa: E402
+    C_ACCENT,
+    C_GOLD,
+    C_PRIMARY,
+    C_SAGE,
+    C_TEXT,
+    apply_theme,
+    callout,
+    fmt_large,
+    inject_css,
+    kpi,
+    page_header,
+    section_label,
+)
+
 API_BASE = os.environ.get("API_BASE_URL", "http://localhost:8000")
 API_KEY = os.environ.get("API_KEY", "forecasting-api-key-2026")
 HEADERS = {"X-API-Key": API_KEY}
 
-st.set_page_config(page_title="Model Comparison", page_icon="🏆", layout="wide")
-st.title("🏆 Model Comparison")
+st.set_page_config(page_title="Model Comparison", page_icon="trophy", layout="wide")
+inject_css()
 
 
 @st.cache_data(ttl=300)
-def get_all_models():
+def get_models() -> list[dict]:
     try:
-        r = httpx.get(f"{API_BASE}/models", headers=HEADERS, timeout=10)
-        if r.status_code == 200:
-            return r.json().get("data", [])
+        resp = httpx.get(f"{API_BASE}/models", headers=HEADERS, timeout=10)
+        if resp.status_code == 200:
+            return resp.json().get("data", [])
     except Exception:
         pass
     return []
 
 
-def _fmt_large(n) -> str:
-    """Format large numbers as 1.23B / 1.23M / 1.23K for readability."""
-    if n is None:
-        return "N/A"
-    n = float(n)
-    if abs(n) >= 1e9:
-        return f"{n / 1e9:.2f}B"
-    if abs(n) >= 1e6:
-        return f"{n / 1e6:.2f}M"
-    if abs(n) >= 1e3:
-        return f"{n / 1e3:.2f}K"
-    return f"{n:.2f}"
+models = [m for m in get_models() if m.get("state")]
 
-
-models = get_all_models()
+page_header(
+    "Model Comparison",
+    "Candidate metrics for every regional model family and champion selection.",
+)
 
 if not models:
-    st.info("No trained models found. Run `make train` first.")
+    callout("No regional model metrics are available yet.", color=C_ACCENT)
     st.stop()
 
 records = []
-for m in models:
-    metrics = m.get("metrics") or {}
+for model in models:
+    metrics = model.get("metrics") or {}
     records.append(
         {
-            "model": m["name"],
-            "state": m.get("state") or "National",
-            "mape": metrics.get("mape", None),
-            "rmse": metrics.get("rmse", None),
-            "mae": metrics.get("mae", None),
-            "is_champion": m.get("is_champion", False),
-            "version": m.get("version", "—"),
+            "Region": model["state"],
+            "Model": model["name"].upper(),
+            "Version": model.get("version"),
+            "CV MAPE %": metrics.get("mape"),
+            "Test MAPE %": metrics.get("test_mape"),
+            "RMSE": metrics.get("rmse"),
+            "MAE": metrics.get("mae"),
+            "Folds": metrics.get("n_folds"),
+            "Champion": bool(model.get("is_champion")),
+            "Artifact": bool(model.get("path")),
         }
     )
 
 df = pd.DataFrame(records)
 
-states = sorted(df["state"].unique())
 with st.sidebar:
-    st.header("Filters")
-    selected_state = st.selectbox("State", ["all states"] + list(states))
-    if st.button("Refresh Data", use_container_width=True):
+    st.markdown("### Filters")
+    regions = sorted(df["Region"].dropna().unique().tolist())
+    versions = sorted(df["Version"].dropna().unique().tolist(), reverse=True)
+    region = st.selectbox("Region", ["All"] + regions)
+    version = st.multiselect("Version", versions, default=versions[:1] or versions)
+    metric = st.selectbox("Rank by", ["CV MAPE %", "Test MAPE %", "RMSE", "MAE"])
+    champions_only = st.checkbox("Champions only", value=False)
+    if st.button("Refresh", width="stretch"):
         st.cache_data.clear()
         st.rerun()
 
-if selected_state != "all states":
-    view_df = df[df["state"] == selected_state].copy()
-else:
-    view_df = df.copy()
+view = df.copy()
+if region != "All":
+    view = view[view["Region"] == region]
+if version:
+    view = view[view["Version"].isin(version)]
+if champions_only:
+    view = view[view["Champion"]]
 
-st.subheader("MAPE by Model")
+ranked = view.dropna(subset=[metric]).sort_values(metric)
+best = ranked.iloc[0] if not ranked.empty else None
+champ_count = int(view["Champion"].sum()) if not view.empty else 0
 
-if view_df.empty or view_df["mape"].isna().all():
-    st.info("No metric data available for the selected state.")
-else:
-    view_df_sorted = view_df.dropna(subset=["mape"]).sort_values("mape")
+k1, k2, k3, k4 = st.columns(4)
+for col, label, value, sub, color in [
+    (k1, "Rows in view", str(len(view)), f"{len(df)} total", C_TEXT),
+    (k2, "Champions", str(champ_count), "current production picks", C_GOLD),
+    (
+        k3,
+        "Best model",
+        best["Model"] if best is not None else "-",
+        best["Region"] if best is not None else "",
+        C_PRIMARY,
+    ),
+    (
+        k4,
+        "Best score",
+        f"{best[metric]:.3f}" if best is not None else "-",
+        metric,
+        C_SAGE,
+    ),
+]:
+    with col:
+        st.markdown(kpi(label, value, sub, color), unsafe_allow_html=True)
 
-    colors = [
-        "gold" if row["is_champion"] else "#636EFA"
-        for _, row in view_df_sorted.iterrows()
-    ]
-    labels = [
-        f"{'👑 ' if row['is_champion'] else ''}{row['model']}"
-        for _, row in view_df_sorted.iterrows()
-    ]
+st.divider()
 
-    fig_bar = go.Figure(
-        go.Bar(
-            x=labels,
-            y=view_df_sorted["mape"].tolist(),
-            marker_color=colors,
-            text=[f"{v:.2f}%" for v in view_df_sorted["mape"].tolist()],
-            textposition="outside",
+tab_leader, tab_heatmap, tab_table = st.tabs(["Leaderboard", "Heatmap", "Table"])
+
+with tab_leader:
+    if ranked.empty:
+        st.info("No rows match the current filters.")
+    else:
+        labels = [
+            f"{row['Region']} / {row['Model']}{' *' if row['Champion'] else ''}"
+            for _, row in ranked.iterrows()
+        ]
+        colors = [
+            C_GOLD if row["Champion"] else C_PRIMARY
+            for _, row in ranked.iterrows()
+        ]
+        fig = go.Figure(
+            go.Bar(
+                x=labels,
+                y=ranked[metric],
+                marker_color=colors,
+                text=[f"{v:.2f}" for v in ranked[metric]],
+                textposition="outside",
+            )
         )
-    )
-    fig_bar.update_layout(
-        title="MAPE by Model (lower is better) — 👑 = Champion",
-        yaxis_title="MAPE %",
-        xaxis_title="Model",
-        height=400,
-        showlegend=False,
-    )
-    st.plotly_chart(fig_bar, use_container_width=True)
+        apply_theme(
+            fig,
+            height=430,
+            title=f"{metric} leaderboard (lower is better)",
+            ylabel=metric,
+            showlegend=False,
+        )
+        fig.update_xaxes(tickangle=-25)
+        st.plotly_chart(fig, width="stretch")
 
-st.subheader("Ranked Model Table")
-table_df = view_df.dropna(subset=["mape"]).sort_values("mape").reset_index(drop=True)
-table_df.insert(0, "Rank", range(1, len(table_df) + 1))
-table_df["Champion"] = table_df["is_champion"].apply(lambda x: "👑" if x else "")
-display_df = table_df[["Rank", "Champion", "model", "state", "mape", "rmse", "mae", "version"]].copy()
-display_df = display_df.rename(columns={"model": "Model", "state": "State", "mape": "MAPE %", "version": "Version"})
-display_df["RMSE"] = display_df["rmse"].apply(_fmt_large)
-display_df["MAE"] = display_df["mae"].apply(_fmt_large)
-display_df = display_df.drop(columns=["rmse", "mae"])
-st.dataframe(display_df, use_container_width=True)
-
-st.subheader("State × Model MAPE Heatmap")
-if len(df["state"].unique()) > 1 and len(df["model"].unique()) > 1:
+with tab_heatmap:
+    section_label("Region × Model Best CV MAPE")
     pivot = df.pivot_table(
-        index="state", columns="model", values="mape", aggfunc="first"
+        index="Region",
+        columns="Model",
+        values="CV MAPE %",
+        aggfunc="min",
     )
-    fig_heat = px.imshow(
-        pivot,
-        color_continuous_scale="RdYlGn_r",
-        title="MAPE Heatmap — State × Model (darker = higher error)",
-        labels={"color": "MAPE %"},
-        aspect="auto",
+    # Drop columns and rows with no data at all
+    pivot = pivot.dropna(axis=1, how="all").dropna(axis=0, how="all")
+    if pivot.empty:
+        st.info("No heatmap data available.")
+    else:
+        # Only show regions that have been evaluated on more than one model family
+        multi_model = pivot.notna().sum(axis=1) > 1
+        display_pivot = pivot[multi_model] if multi_model.any() else pivot
+        if display_pivot.empty:
+            st.info(
+                "All regions were evaluated on a single model family — "
+                "train additional model types to compare."
+            )
+        else:
+            fig = px.imshow(
+                display_pivot,
+                color_continuous_scale=[
+                    [0.0, "#4E7A63"],
+                    [0.5, "#B8850A"],
+                    [1.0, "#964040"],
+                ],
+                labels={"color": "CV MAPE %"},
+                aspect="auto",
+                text_auto=".2f",
+            )
+            fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="#EAE3D6",
+                font=dict(color=C_TEXT),
+                height=max(420, len(display_pivot) * 28 + 120),
+                margin=dict(l=120, r=60, t=45, b=60),
+            )
+            st.plotly_chart(fig, width="stretch")
+        if not multi_model.all():
+            n_single = int((~multi_model).sum())
+            st.caption(
+                f"{n_single} region(s) trained on a single model family are "
+                "hidden from the heatmap. Enable more model types in the config "
+                "and retrain to include them."
+            )
+
+with tab_table:
+    display = view.sort_values(["Region", "CV MAPE %"], na_position="last").copy()
+    display["Champion"] = display["Champion"].map(lambda value: "yes" if value else "")
+    display["Artifact"] = display["Artifact"].map(
+        lambda value: "ready" if value else ""
     )
-    fig_heat.update_layout(height=max(400, len(pivot) * 20))
-    st.plotly_chart(fig_heat, use_container_width=True)
-else:
-    st.info(
-        "Heatmap requires models trained for multiple states and multiple model types."
+    for pct_col in ["CV MAPE %", "Test MAPE %"]:
+        display[pct_col] = display[pct_col].map(
+            lambda value: f"{value:.3f}" if pd.notna(value) else "-"
+        )
+    for abs_col in ["RMSE", "MAE"]:
+        display[abs_col] = display[abs_col].map(fmt_large)
+    st.dataframe(display, width="stretch", hide_index=True)
+    st.caption(
+        "Non-champion rows store candidate metrics only. Champion rows also have "
+        "the full-history model artifact used by the API."
     )

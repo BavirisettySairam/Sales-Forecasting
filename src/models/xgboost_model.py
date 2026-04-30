@@ -43,7 +43,8 @@ class XGBoostForecaster(BaseForecaster):
         df = self._ensure_feature_columns(data)
         featured = create_features(df, self.config)
         self._feature_cols = get_feature_columns(featured)
-        X = featured[self._feature_cols]  # keep DataFrame so feature names are consistent
+        # Keep DataFrame so feature names are consistent.
+        X = featured[self._feature_cols]
         y = featured[target_col].values
         return X, y
 
@@ -58,13 +59,16 @@ class XGBoostForecaster(BaseForecaster):
             "reg_lambda": trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
         }
         from sklearn.metrics import make_scorer, mean_absolute_percentage_error
-        from sklearn.model_selection import cross_val_score
+        from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 
         model = xgb.XGBRegressor(
             **params, objective="reg:squarederror", random_state=42, verbosity=0
         )
+        if len(X) < 4:
+            return float("inf")
+        tscv = TimeSeriesSplit(n_splits=min(3, len(X) - 1))
         scores = cross_val_score(
-            model, X, y, cv=3, scoring=make_scorer(mean_absolute_percentage_error)
+            model, X, y, cv=tscv, scoring=make_scorer(mean_absolute_percentage_error)
         )
         return scores.mean()
 
@@ -72,7 +76,7 @@ class XGBoostForecaster(BaseForecaster):
         cfg = self.config.get("xgboost", {})
         n_trials = cfg.get("n_trials", 50)
 
-        # Aggregate across states if multi-state — keeps predict() output comparable to national actuals
+        # Aggregate only when a caller intentionally fits a multi-state global model.
         if "state" in train_data.columns and train_data["state"].nunique() > 1:
             agg = train_data.groupby("date")[target_col].sum().reset_index()
             agg["state"] = "national"
@@ -99,7 +103,11 @@ class XGBoostForecaster(BaseForecaster):
         logger.info("XGBoost fitting final model", device="cuda" if _CUDA else "cpu")
 
         self.model = xgb.XGBRegressor(
-            **best, objective="reg:squarederror", random_state=42, verbosity=0, **gpu_kwargs
+            **best,
+            objective="reg:squarederror",
+            random_state=42,
+            verbosity=0,
+            **gpu_kwargs,
         )
         self.model.fit(X, y)
 
@@ -139,6 +147,9 @@ class XGBoostForecaster(BaseForecaster):
             p = float(self.model.predict(x_row)[0])
             lo = float(self._model_lower.predict(x_row)[0])
             hi = float(self._model_upper.predict(x_row)[0])
+            lo, hi = sorted((lo, hi))
+            lo = min(lo, p)
+            hi = max(hi, p)
             preds.append(max(p, 0))
             lowers.append(max(lo, 0))
             uppers.append(max(hi, 0))

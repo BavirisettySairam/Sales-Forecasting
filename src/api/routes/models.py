@@ -19,14 +19,8 @@ async def get_all_models(redis=Depends(get_redis)):
 
 @router.get("/{state}", dependencies=[Depends(verify_api_key)])
 async def get_models_for_state(state: str, redis=Depends(get_redis)):
-    all_models = list_models()
     state_clean = state.strip().title()
-    filtered = [
-        m
-        for m in all_models
-        if (m.get("state") or "").strip().title() == state_clean
-        or m.get("state") is None
-    ]
+    filtered = list_models(state_clean)
     return success_response(
         data=filtered, message=f"{len(filtered)} model(s) for {state_clean}"
     )

@@ -10,13 +10,13 @@ router = APIRouter(tags=["health"])
 @router.get("/health")
 def health(redis=Depends(get_redis)):
     db_ok = check_db_health()
-
+    redis_ok = False
     try:
-        redis_ok = redis.ping()
+        redis_ok = bool(redis.ping())
     except Exception:
         redis_ok = False
 
-    status = "healthy" if (db_ok and redis_ok) else "degraded"
+    status = "healthy" if db_ok and redis_ok else "degraded"
 
     return success_response(
         data={

@@ -14,18 +14,28 @@ _retrain_limiter = RateLimiter(redis_client=None, max_requests=5, window_seconds
 
 
 def _run_retraining(states: list[str] | None):
-    from src.pipeline.train import run_training
+    import yaml
+
+    from src.config.training import configured_data_path
+    from src.pipeline.train import run_training_all_states
 
     try:
-        result = run_training(
-            data_path="data/raw/dataset.csv",
-            config_path="config/training_config.yaml",
+        config_path = "config/training_config.yaml"
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+        result = run_training_all_states(
+            data_path=configured_data_path(config),
+            config_path=config_path,
             models_to_run=None,
-            state_filter=states[0] if states and len(states) == 1 else None,
+            states=states,
             skip_cv=False,
         )
         redis_client.invalidate_all()
-        logger.info("Retraining complete", champion=result["champion"])
+        logger.info(
+            "Retraining complete",
+            states_succeeded=result["states_succeeded"],
+            states_failed=result["states_failed"],
+        )
     except Exception as exc:
         logger.error("Retraining failed", error=str(exc))
 

@@ -29,51 +29,33 @@ training:
 
 models:
   sarima:
-    enabled: true
-    auto_arima: true
-    seasonal_period: 52            # weekly seasonality
-    max_p: 3
-    max_q: 3
-    max_P: 2
-    max_Q: 2
+    enabled: false
 
   prophet:
-    enabled: true
-    yearly_seasonality: true
-    weekly_seasonality: true
-    changepoint_prior_scale: 0.05
-    seasonality_prior_scale: 10.0
+    enabled: false
 
   xgboost:
     enabled: true
-    n_trials: 30
+    n_trials: 5
     param_space:
-      n_estimators: [100, 1000]
-      max_depth: [3, 10]
-      learning_rate: [0.01, 0.3]
+      n_estimators: [100, 500]
+      max_depth: [3, 7]
+      learning_rate: [0.02, 0.3]
       subsample: [0.6, 1.0]
       colsample_bytree: [0.6, 1.0]
 
   lightgbm:
-    enabled: true
-    n_trials: 30
+    enabled: false
+    n_trials: 5
     param_space:
-      n_estimators: [100, 1000]
-      max_depth: [3, 10]
-      learning_rate: [0.01, 0.3]
-      num_leaves: [20, 150]
+      n_estimators: [100, 500]
+      max_depth: [3, 7]
+      learning_rate: [0.02, 0.3]
+      num_leaves: [20, 80]
       subsample: [0.6, 1.0]
 
   lstm:
-    enabled: true
-    sequence_length: 30
-    hidden_size: 64
-    num_layers: 2
-    dropout: 0.2
-    epochs: 50
-    batch_size: 32
-    learning_rate: 0.001
-    early_stopping_patience: 10
+    enabled: false
 
 api:
   host: "0.0.0.0"

@@ -14,6 +14,7 @@ from src.api.rate_limiter import RateLimiter
 from src.api.schemas.request import ForecastRequest
 from src.api.schemas.response import ForecastData, ForecastPoint
 from src.cache.redis_client import RedisClient
+from src.config.training import model_config
 from src.db.models import Forecast
 from src.pipeline.registry import get_champion
 from src.utils.logger import logger
@@ -48,7 +49,7 @@ async def _generate_forecast(state: str, weeks: int, db: Session, redis_raw) -> 
         logger.info("Cache hit", state=state, weeks=weeks)
         return cached
 
-    champion = get_champion()
+    champion = get_champion(state)
     if not champion:
         raise ModelNotTrainedException(state)
 
@@ -78,7 +79,7 @@ async def _generate_forecast(state: str, weeks: int, db: Session, redis_raw) -> 
 
     try:
         with open("config/training_config.yaml") as f:
-            config = yaml.safe_load(f)
+            config = model_config(yaml.safe_load(f))
         forecaster = model_cls(config)
         forecaster.load(model_path)
         fc_df = forecaster.predict(weeks)
