@@ -73,7 +73,6 @@ models = fetch_models()
 health = fetch_health()
 api_ok = health.get("api") == "ok"
 db_ok = health.get("database") == "ok"
-redis_ok = health.get("redis") == "ok"
 
 regional_models = [m for m in models if m.get("state")]
 champions = [m for m in regional_models if m.get("is_champion")]
@@ -90,8 +89,8 @@ if not api_ok:
     st.error(
         "API is unavailable. Start the FastAPI service before using the dashboard."
     )
-elif not db_ok or not redis_ok:
-    st.warning("API is up, but one backing service is degraded.")
+elif not db_ok:
+    st.warning("API is up, but the database is degraded.")
 
 mape_vals = [
     (m.get("metrics") or {}).get("mape")
@@ -178,7 +177,6 @@ summary = [
     ("Model types", ", ".join(sorted({m["name"].upper() for m in regional_models}))),
     ("Training versions", str(len(versions))),
     ("API", "ok" if api_ok else "down"),
-    ("Redis", "ok" if redis_ok else "down"),
 ]
 for col, (label, value) in zip(summary_cols, summary):
     with col:

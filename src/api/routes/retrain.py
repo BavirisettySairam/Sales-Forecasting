@@ -1,16 +1,14 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 
 from src.api.auth import verify_api_key
-from src.api.dependencies import get_redis
 from src.api.rate_limiter import RateLimiter
 from src.api.schemas.request import RetrainRequest
-from src.cache.redis_client import redis_client
 from src.utils.logger import logger
 from src.utils.response import success_response
 
 router = APIRouter(prefix="/retrain", tags=["retrain"])
 
-_retrain_limiter = RateLimiter(redis_client=None, max_requests=5, window_seconds=3600)
+_retrain_limiter = RateLimiter(max_requests=5, window_seconds=3600)
 
 
 def _run_retraining(states: list[str] | None):
@@ -30,7 +28,6 @@ def _run_retraining(states: list[str] | None):
             states=states,
             skip_cv=False,
         )
-        redis_client.invalidate_all()
         logger.info(
             "Retraining complete",
             states_succeeded=result["states_succeeded"],
@@ -45,14 +42,12 @@ async def trigger_retrain(
     body: RetrainRequest,
     background_tasks: BackgroundTasks,
     request: Request,
-    redis=Depends(get_redis),
 ):
-    _retrain_limiter.redis = redis
     await _retrain_limiter.check(request)
 
     background_tasks.add_task(_run_retraining, body.states)
     logger.info("Retraining scheduled", states=body.states)
     return success_response(
         data={"scheduled": True, "states": body.states or "all"},
-        message="Retraining started in background. Cache will be invalidated on completion.",  # noqa: E501
+        message="Retraining started in background.",  # noqa: E501
     )

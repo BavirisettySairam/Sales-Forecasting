@@ -33,14 +33,6 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("DB init failed (continuing)", error=str(exc))
 
-    try:
-        from src.cache.redis_client import redis_client
-
-        redis_client.health_check()
-        logger.info("Redis connected")
-    except Exception as exc:
-        logger.warning("Redis unavailable (continuing)", error=str(exc))
-
     yield
 
     logger.info("API shutting down")

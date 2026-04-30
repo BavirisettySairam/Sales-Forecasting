@@ -1,49 +1,36 @@
 import time
 
 from fastapi import HTTPException, Request
-from redis import Redis
 
 
 class RateLimiter:
     def __init__(
-        self, redis_client: Redis, max_requests: int = 100, window_seconds: int = 60
+        self, max_requests: int = 100, window_seconds: int = 60
     ):
-        self.redis = redis_client
         self.max_requests = max_requests
         self.window = window_seconds
+        self._store: dict[str, list[float]] = {}
 
     async def check(self, request: Request) -> dict:
-        # If Redis is unavailable, fail open — don't block requests
-        if self.redis is None:
-            return {}
-
         client_id = request.headers.get("X-API-Key") or (
             request.client.host if request.client else "unknown"
         )
-        key = f"rate_limit:{client_id}"
 
-        now = int(time.time())
+        now = time.time()
         window_start = now - self.window
-
-        try:
-            pipe = self.redis.pipeline()
-            pipe.zremrangebyscore(key, 0, window_start)
-            pipe.zadd(key, {str(now): now})
-            pipe.zcard(key)
-            pipe.expire(key, self.window)
-            results = pipe.execute()
-        except Exception:
-            # Redis unavailable — skip rate limiting rather than crashing
-            return {}
-
-        count = results[2]
+        
+        # Clean up old entries and count
+        history = self._store.get(client_id, [])
+        history = [t for t in history if t > window_start]
+        
+        count = len(history)
         remaining = max(self.max_requests - count, 0)
-        reset_at = now + self.window
+        reset_at = int(now + self.window)
 
-        if count > self.max_requests:
+        if count >= self.max_requests:
             raise HTTPException(
                 status_code=429,
-                detail=f"Rate limit exceeded. Max {self.max_requests} requests per {self.window}s.",  # noqa: E501
+                detail=f"Rate limit exceeded. Max {self.max_requests} requests per {self.window}s.",
                 headers={
                     "X-RateLimit-Limit": str(self.max_requests),
                     "X-RateLimit-Remaining": "0",
@@ -52,8 +39,12 @@ class RateLimiter:
                 },
             )
 
+        history.append(now)
+        self._store[client_id] = history
+
         return {
             "X-RateLimit-Limit": str(self.max_requests),
-            "X-RateLimit-Remaining": str(remaining),
+            "X-RateLimit-Remaining": str(remaining - 1),
             "X-RateLimit-Reset": str(reset_at),
         }
+

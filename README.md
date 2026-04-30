@@ -1,6 +1,6 @@
 # 📈 Sales Forecasting System
 
-> Production-ready time series forecasting with automatic model selection, REST API, Streamlit dashboard, PostgreSQL, Redis, and Docker deployment.
+> Production-ready time series forecasting with automatic model selection, REST API, Streamlit dashboard, and PostgreSQL.
 
 ---
 
@@ -23,9 +23,8 @@ flowchart TD
     F --> G[(PostgreSQL\ntraining_runs\nforecasts\napi_logs)]
     F --> H[File System\nmodels/*.pkl *.pt\nregistry.json]
 
-    G & H --> I[FastAPI\nAPI key auth\nRate limiting\nSecurity headers]
-    I <--> J[(Redis\n24h forecast cache\nRate limit counters)]
-    I --> K[Streamlit Dashboard\n4 pages\nhttpx → API]
+    G & H --> I[FastAPI\nAPI key auth\nIn-memory Rate limiting\nSecurity headers]
+    I --> K[Streamlit Dashboard\n5 pages\nhttpx → API]
 ```
 
 ---
@@ -38,7 +37,7 @@ flowchart TD
 | Dashboard | Streamlit + Plotly | 1.38 / 5.24 |
 | ORM | SQLAlchemy | 2.0 |
 | Database | PostgreSQL | 16 |
-| Cache / Rate limiting | Redis | 7 |
+| Rate limiting | In-Memory | — |
 | Config | pydantic-settings | 2.5 |
 | Logging | loguru | 0.7 |
 | Validation | Pandera | 0.20 |
@@ -48,7 +47,6 @@ flowchart TD
 | Neural Network | PyTorch | 2.4 |
 | Hyperparameter Tuning | Optuna | 4.0 |
 | Serialisation | joblib | 1.4 |
-| Containers | Docker + Compose | — |
 | CI/CD | GitHub Actions | — |
 | Testing | pytest | 8.3 |
 | Linting | ruff + black | 0.6 / 24.8 |
@@ -58,33 +56,15 @@ flowchart TD
 ## Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose
+- PostgreSQL running locally
 - Python 3.11+ with conda (for local development)
 
-### One-command Docker setup
+### Local development (conda)
 
 ```bash
 git clone https://github.com/BavirisettySairam/Sales-Forecasting.git
 cd Sales-Forecasting
 
-# Add your dataset
-cp /path/to/dataset.csv data/raw/dataset.csv
-
-# Start all 4 services (API, Dashboard, PostgreSQL, Redis)
-make docker-up
-```
-
-Services:
-| Service | URL |
-|---|---|
-| REST API | http://localhost:8000 |
-| API Docs (Swagger) | http://localhost:8000/docs |
-| Streamlit Dashboard | http://localhost:8501 |
-| Health Check | http://localhost:8000/health |
-
-### Local development (conda)
-
-```bash
 # Create and activate environment
 conda create -n microgcc python=3.11 -y
 conda activate microgcc
@@ -94,10 +74,7 @@ pip install poetry
 poetry config virtualenvs.create false
 poetry install
 
-# Start PostgreSQL and Redis via Docker
-docker-compose up postgres redis -d
-
-# Run database migrations
+# Start PostgreSQL locally, then run database migrations
 alembic upgrade head
 
 # Train models
@@ -369,6 +346,13 @@ lint (ruff + black)
     └── test (pytest + real Postgres + Redis) ← parallel
             └── docker-build + smoke test (curl /health)
 ```
+
+---
+
+## Future Upgradations
+
+- **Caching & Rate Limiting (Redis):** Redis was originally used for cross-process caching and rate-limiting but was temporarily removed from the main branch due to unresolvable errors during development constraints. Reintegrating Redis would improve performance for high-traffic API loads.
+- **Containerization (Docker):** Dockerization and `docker-compose` setups were tested but caused environmental issues and were rolled back for future deployment refinement. Providing a stable, robust Docker implementation is a top priority for scaling the infrastructure.
 
 ---
 

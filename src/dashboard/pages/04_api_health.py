@@ -72,10 +72,9 @@ health_check = timed_get("/health")
 health = health_check.get("body", {}).get("data", {})
 api_ok = health.get("api") == "ok"
 db_ok = health.get("database") == "ok"
-redis_ok = health.get("redis") == "ok"
 latency = health_check.get("latency_ms")
 
-c1, c2, c3, c4 = st.columns(4)
+c1, c2, c3 = st.columns(3)
 for col, label, value, sub, color in [
     (
         c1,
@@ -91,14 +90,7 @@ for col, label, value, sub, color in [
         "SQLAlchemy",
         C_SAGE if db_ok else C_DANGER,
     ),
-    (
-        c3,
-        "Redis",
-        health.get("redis", "-").upper(),
-        "cache/rate limit",
-        C_SAGE if redis_ok else C_ACCENT,
-    ),
-    (c4, "Latency", f"{latency} ms" if latency else "-", "/health", C_PRIMARY),
+    (c3, "Latency", f"{latency} ms" if latency else "-", "/health", C_PRIMARY),
 ]:
     with col:
         st.markdown(kpi(label, value, sub, color), unsafe_allow_html=True)

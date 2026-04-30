@@ -34,36 +34,6 @@ def db_session(engine):
     session.close()
 
 
-# ── Mock Redis ─────────────────────────────────────────────────────────────
-@pytest.fixture
-def mock_redis():
-    store: dict = {}
-
-    redis = MagicMock()
-    redis.ping.return_value = True
-    redis.get.side_effect = lambda k: store.get(k)
-    redis.setex.side_effect = lambda k, ttl, v: store.update({k: v})
-    redis.set.side_effect = lambda k, v: store.update({k: v})
-    redis.keys.side_effect = lambda pattern: [
-        k for k in store if k.startswith(pattern.replace("*", ""))
-    ]
-    redis.delete.side_effect = lambda *keys: [store.pop(k, None) for k in keys]
-    redis.incr.side_effect = (
-        lambda k: store.update({k: store.get(k, 0) + 1}) or store[k]
-    )
-    redis.expire.return_value = True
-
-    pipe = MagicMock()
-    pipe.execute.return_value = [0, 0, 1, True]
-    pipe.zremrangebyscore.return_value = pipe
-    pipe.zadd.return_value = pipe
-    pipe.zcard.return_value = pipe
-    pipe.expire.return_value = pipe
-    redis.pipeline.return_value = pipe
-
-    return redis
-
-
 # ── Sample weekly DataFrame (3 states × 52 weeks) ─────────────────────────
 @pytest.fixture
 def sample_weekly_df():
@@ -142,12 +112,11 @@ def base_config():
 
 # ── FastAPI test client with overridden dependencies ───────────────────────
 @pytest.fixture
-def api_client(db_session, mock_redis):
-    from src.api.dependencies import get_db_dep, get_redis
+def api_client(db_session):
+    from src.api.dependencies import get_db_dep
     from src.api.main import app
 
     app.dependency_overrides[get_db_dep] = lambda: db_session
-    app.dependency_overrides[get_redis] = lambda: mock_redis
     client = TestClient(app, raise_server_exceptions=False)
     yield client
     app.dependency_overrides.clear()

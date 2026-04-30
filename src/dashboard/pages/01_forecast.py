@@ -69,7 +69,7 @@ with st.sidebar:
     else:
         selected_region = None
         st.info("No trained regional champions yet.")
-    weeks = st.slider("Horizon (weeks)", min_value=1, max_value=52, value=8)
+    weeks = st.slider("Horizon (weeks)", min_value=1, max_value=10, value=8)
     run = st.button("Generate Forecast", type="primary", width="stretch")
     if st.button("Refresh Registry", width="stretch"):
         st.cache_data.clear()

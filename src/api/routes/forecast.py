@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from src.api.auth import verify_api_key
-from src.api.dependencies import get_db_dep, get_redis
+from src.api.dependencies import get_db_dep
 from src.api.exceptions import (
     ForecastGenerationError,
     ModelNotTrainedException,
@@ -13,7 +13,6 @@ from src.api.exceptions import (
 from src.api.rate_limiter import RateLimiter
 from src.api.schemas.request import ForecastRequest
 from src.api.schemas.response import ForecastData, ForecastPoint
-from src.cache.redis_client import RedisClient
 from src.config.training import model_config
 from src.db.models import Forecast
 from src.pipeline.registry import get_champion
@@ -22,7 +21,7 @@ from src.utils.response import success_response
 
 router = APIRouter(prefix="/forecast", tags=["forecast"])
 
-_forecast_limiter = RateLimiter(redis_client=None, max_requests=100, window_seconds=60)
+_forecast_limiter = RateLimiter(max_requests=100, window_seconds=60)
 
 VALID_STATES: set[str] = set()
 
@@ -34,20 +33,7 @@ def _validate_state(state: str) -> str:
     return cleaned
 
 
-async def _generate_forecast(state: str, weeks: int, db: Session, redis_raw) -> dict:
-    # Try to serve from cache — skip silently if Redis is unavailable
-    cached = None
-    try:
-        rc = RedisClient.__new__(RedisClient)
-        rc.client = redis_raw
-        rc.ttl = 86400
-        cached = rc.get_forecast(state, weeks)
-    except Exception:
-        rc = None
-
-    if cached:
-        logger.info("Cache hit", state=state, weeks=weeks)
-        return cached
+async def _generate_forecast(state: str, weeks: int, db: Session) -> dict:
 
     champion = get_champion(state)
     if not champion:
@@ -104,13 +90,6 @@ async def _generate_forecast(state: str, weeks: int, db: Session, redis_raw) -> 
         forecast=points,
     ).model_dump()
 
-    # Cache result — skip silently if Redis is unavailable
-    if rc is not None:
-        try:
-            rc.set_forecast(state, weeks, data)
-        except Exception:
-            pass
-
     try:
         for pt in points:
             db.add(
@@ -137,12 +116,10 @@ async def post_forecast(
     body: ForecastRequest,
     request: Request,
     db: Session = Depends(get_db_dep),
-    redis=Depends(get_redis),
 ):
-    _forecast_limiter.redis = redis
     await _forecast_limiter.check(request)
     state = _validate_state(body.state)
-    data = await _generate_forecast(state, body.weeks, db, redis)
+    data = await _generate_forecast(state, body.weeks, db)
     return success_response(data=data, message="Forecast generated successfully")
 
 
@@ -152,10 +129,8 @@ async def get_forecast_by_state(
     request: Request,
     weeks: int = 8,
     db: Session = Depends(get_db_dep),
-    redis=Depends(get_redis),
 ):
-    _forecast_limiter.redis = redis
     await _forecast_limiter.check(request)
     state = _validate_state(state)
-    data = await _generate_forecast(state, weeks, db, redis)
+    data = await _generate_forecast(state, weeks, db)
     return success_response(data=data, message="Forecast generated successfully")

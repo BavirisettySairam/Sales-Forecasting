@@ -22,7 +22,6 @@ def test_health_response_structure(api_client):
     assert "data" in body
     assert "api" in body["data"]
     assert "database" in body["data"]
-    assert "redis" in body["data"]
 
 
 def test_health_has_timestamp_and_request_id(api_client):
@@ -85,10 +84,10 @@ def test_forecast_invalid_weeks_below_1(api_client):
     assert resp.status_code == 422
 
 
-def test_forecast_invalid_weeks_above_52(api_client):
+def test_forecast_invalid_weeks_above_10(api_client):
     resp = api_client.post(
         "/forecast",
-        json={"state": "California", "weeks": 53},
+        json={"state": "California", "weeks": 11},
         headers=AUTH,
     )
     assert resp.status_code == 422
