@@ -18,11 +18,11 @@ class RateLimiter:
 
         now = time.time()
         window_start = now - self.window
-        
+
         # Clean up old entries and count
         history = self._store.get(client_id, [])
         history = [t for t in history if t > window_start]
-        
+
         count = len(history)
         remaining = max(self.max_requests - count, 0)
         reset_at = int(now + self.window)
@@ -30,7 +30,10 @@ class RateLimiter:
         if count >= self.max_requests:
             raise HTTPException(
                 status_code=429,
-                detail=f"Rate limit exceeded. Max {self.max_requests} requests per {self.window}s.",
+                detail=(
+                    f"Rate limit exceeded. Max {self.max_requests} "
+                    f"requests per {self.window}s."
+                ),
                 headers={
                     "X-RateLimit-Limit": str(self.max_requests),
                     "X-RateLimit-Remaining": "0",

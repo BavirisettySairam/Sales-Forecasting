@@ -23,13 +23,16 @@ C_TEXT_LITE = "#6B7280"
 
 C_PRIMARY   = "#0F172A"   # deep navy/slate
 C_ACCENT    = "#2563EB"   # bright corporate blue
-C_BLUE      = "#3B82F6"   
+C_BLUE      = "#3B82F6"
 C_SAGE      = "#059669"   # deeper emerald
 C_GOLD      = "#D97706"   # deeper amber
 C_TERRA     = "#E11D48"   # rose
 C_DANGER    = "#DC2626"   # red
 
-PALETTE = [C_ACCENT, C_PRIMARY, "#0EA5E9", C_SAGE, C_GOLD, C_TERRA, "#8B5CF6", "#DB2777"]
+PALETTE = [
+    C_ACCENT, C_PRIMARY, "#0EA5E9", C_SAGE,
+    C_GOLD, C_TERRA, "#8B5CF6", "#DB2777"
+]
 
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
@@ -63,11 +66,12 @@ def kpi(label: str, value: str, sub: str = "", color: str = C_TEXT) -> str:
         if sub else ""
     )
     return (
-        f"<div style=\"background:{C_SURFACE};border:1px solid {C_BORDER};border-radius:8px;"
-        f"padding:1.25rem;box-sizing:border-box;height:100%;box-shadow:0 1px 2px 0 rgba(0,0,0,0.05);\">"
+        f"<div style=\"background:{C_SURFACE};border:1px solid {C_BORDER};"
+        f"border-radius:8px;padding:1.25rem;box-sizing:border-box;height:100%;"
+        f"box-shadow:0 1px 2px 0 rgba(0,0,0,0.05);\">"
         f"<p style=\"font-family:'Inter',sans-serif;font-size:0.65rem;font-weight:600;"
-        f"text-transform:uppercase;letter-spacing:0.05em;color:{C_TEXT_MID};margin:0 0 0.5rem;\""
-        f">{label}</p>"
+        f"text-transform:uppercase;letter-spacing:0.05em;color:{C_TEXT_MID};"
+        f"margin:0 0 0.5rem;\">{label}</p>"
         f"<p style=\"font-family:'JetBrains Mono',monospace;font-size:1.6rem;"
         f"font-weight:600;color:{color};margin:0;line-height:1.1;\">{value}</p>"
         f"{sub_html}</div>"
@@ -180,7 +184,8 @@ def apply_theme(fig: go.Figure, **kwargs) -> go.Figure:
 _CSS = """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&"""
+"""family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 
 /* ── Reset & global ─────────────────────────────────────────────────────────── */
@@ -232,16 +237,17 @@ p { font-family: 'Inter', sans-serif !important; color: #374151 !important; }
     text-transform: capitalize !important;
     border: 1px solid transparent !important;
 }
-[data-testid="stSidebarNav"] [aria-selected="true"] { 
+[data-testid="stSidebarNav"] [aria-selected="true"] {
     background: #FFFFFF !important;
     color: #0F172A !important;
     font-weight: 600 !important;
     border: 1px solid #E5E7EB !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+                0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
     transform: translateY(-1px) !important;
 }
-[data-testid="stSidebarNav"] a:hover { 
-    color: #111827 !important; 
+[data-testid="stSidebarNav"] a:hover {
+    color: #111827 !important;
     background: #F3F4F6 !important;
 }
 
@@ -439,8 +445,8 @@ hr {
 }
 
 /* ── Alerts / info ──────────────────────────────────────────────────────────── */
-[data-testid="stAlert"] { 
-    border-radius: 12px !important; 
+[data-testid="stAlert"] {
+    border-radius: 12px !important;
     border: none !important;
 }
 

@@ -51,7 +51,11 @@ class LSTMForecaster(BaseForecaster):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Aggregate across states → one value per date (LSTM takes a single series)
-        if "date" in train_data.columns and "state" in train_data.columns and train_data["state"].nunique() > 1:
+        if (
+            "date" in train_data.columns
+            and "state" in train_data.columns
+            and train_data["state"].nunique() > 1
+        ):
             agg = train_data.groupby("date")[target_col].sum().sort_index()
             series = agg.values.reshape(-1, 1)
             self._last_date = pd.Timestamp(agg.index[-1])

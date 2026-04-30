@@ -1,7 +1,6 @@
 """Shared fixtures for all test modules."""
 
 import os
-from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd

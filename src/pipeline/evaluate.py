@@ -76,7 +76,12 @@ def time_series_cv(
             n_dates=n_dates,
             required=min_train_size + horizon,
         )
-        return {"mape": float("inf"), "rmse": float("inf"), "mae": float("inf"), "n_folds": 0}
+        return {
+            "mape": float("inf"),
+            "rmse": float("inf"),
+            "mae": float("inf"),
+            "n_folds": 0,
+        }
 
     step = max((n_dates - min_train_size - horizon) // n_splits, 1)
     fold_metrics: list[dict[str, float]] = []
@@ -106,7 +111,12 @@ def time_series_cv(
             n = min(len(actual), len(predicted))
             metrics = calculate_metrics(actual[:n], predicted[:n])
             fold_metrics.append(metrics)
-            logger.info("CV fold done", fold=fold + 1, cutoff=str(cutoff)[:10], **metrics)
+            logger.info(
+                "CV fold done",
+                fold=fold + 1,
+                cutoff=str(cutoff)[:10],
+                **metrics
+            )
         except Exception as exc:
             logger.warning("CV fold failed", fold=fold + 1, error=str(exc))
             logger.exception("CV fold traceback")
