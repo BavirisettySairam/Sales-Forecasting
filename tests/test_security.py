@@ -188,8 +188,9 @@ def test_docs_disabled_in_production():
 # ── Rate limiter structure ────────────────────────────────────────────────
 
 
-def test_rate_limiter_returns_headers_on_success(api_client, mock_redis):
-    # Patch the pipeline execute to simulate 1 request in window
-    mock_redis.pipeline.return_value.execute.return_value = [0, 0, 1, True]
+def test_rate_limiter_returns_headers_on_success(api_client):
     resp = api_client.get("/models", headers=AUTH)
     assert resp.status_code == 200
+    assert "X-RateLimit-Limit" in resp.headers
+    assert "X-RateLimit-Remaining" in resp.headers
+    assert "X-RateLimit-Reset" in resp.headers
