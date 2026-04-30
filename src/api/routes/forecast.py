@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
 from src.api.auth import verify_api_key
@@ -115,9 +115,12 @@ async def _generate_forecast(state: str, weeks: int, db: Session) -> dict:
 async def post_forecast(
     body: ForecastRequest,
     request: Request,
+    response: Response,
     db: Session = Depends(get_db_dep),
 ):
-    await _forecast_limiter.check(request)
+    headers = await _forecast_limiter.check(request)
+    for k, v in headers.items():
+        response.headers[k] = v
     state = _validate_state(body.state)
     data = await _generate_forecast(state, body.weeks, db)
     return success_response(data=data, message="Forecast generated successfully")
@@ -127,10 +130,13 @@ async def post_forecast(
 async def get_forecast_by_state(
     state: str,
     request: Request,
+    response: Response,
     weeks: int = 8,
     db: Session = Depends(get_db_dep),
 ):
-    await _forecast_limiter.check(request)
+    headers = await _forecast_limiter.check(request)
+    for k, v in headers.items():
+        response.headers[k] = v
     state = _validate_state(state)
     data = await _generate_forecast(state, weeks, db)
     return success_response(data=data, message="Forecast generated successfully")

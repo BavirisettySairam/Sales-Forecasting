@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
 
 from src.api.auth import verify_api_key
 from src.api.rate_limiter import RateLimiter
@@ -42,8 +42,11 @@ async def trigger_retrain(
     body: RetrainRequest,
     background_tasks: BackgroundTasks,
     request: Request,
+    response: Response,
 ):
-    await _retrain_limiter.check(request)
+    headers = await _retrain_limiter.check(request)
+    for k, v in headers.items():
+        response.headers[k] = v
 
     background_tasks.add_task(_run_retraining, body.states)
     logger.info("Retraining scheduled", states=body.states)

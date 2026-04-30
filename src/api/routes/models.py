@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request, Response
 
 from src.api.auth import verify_api_key
 from src.api.rate_limiter import RateLimiter
@@ -11,13 +11,19 @@ _models_limiter = RateLimiter(max_requests=200, window_seconds=60)
 
 
 @router.get("", dependencies=[Depends(verify_api_key)])
-async def get_all_models():
+async def get_all_models(request: Request, response: Response):
+    headers = await _models_limiter.check(request)
+    for k, v in headers.items():
+        response.headers[k] = v
     models = list_models()
     return success_response(data=models, message=f"{len(models)} model(s) found")
 
 
 @router.get("/{state}", dependencies=[Depends(verify_api_key)])
-async def get_models_for_state(state: str):
+async def get_models_for_state(state: str, request: Request, response: Response):
+    headers = await _models_limiter.check(request)
+    for k, v in headers.items():
+        response.headers[k] = v
     state_clean = state.strip().title()
     filtered = list_models(state_clean)
     return success_response(
