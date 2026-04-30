@@ -6,32 +6,39 @@ Typography stack
   UI / body             : Inter (geometric sans-serif)
   Numbers / metrics     : JetBrains Mono (tabular monospace)
 """
+
 from __future__ import annotations
 
 import plotly.graph_objects as go
 
 # ── Tokens ────────────────────────────────────────────────────────────────────
-C_BG        = "#F9FAFB"
-C_SURFACE   = "#FFFFFF"
+C_BG = "#F9FAFB"
+C_SURFACE = "#FFFFFF"
 C_SURFACE_2 = "#F3F4F6"
-C_BORDER    = "#E5E7EB"
+C_BORDER = "#E5E7EB"
 C_BORDER_DK = "#D1D5DB"
 
-C_TEXT      = "#111827"
-C_TEXT_MID  = "#4B5563"
+C_TEXT = "#111827"
+C_TEXT_MID = "#4B5563"
 C_TEXT_LITE = "#6B7280"
 
-C_PRIMARY   = "#0F172A"   # deep navy/slate
-C_ACCENT    = "#2563EB"   # bright corporate blue
-C_BLUE      = "#3B82F6"
-C_SAGE      = "#059669"   # deeper emerald
-C_GOLD      = "#D97706"   # deeper amber
-C_TERRA     = "#E11D48"   # rose
-C_DANGER    = "#DC2626"   # red
+C_PRIMARY = "#0F172A"  # deep navy/slate
+C_ACCENT = "#2563EB"  # bright corporate blue
+C_BLUE = "#3B82F6"
+C_SAGE = "#059669"  # deeper emerald
+C_GOLD = "#D97706"  # deeper amber
+C_TERRA = "#E11D48"  # rose
+C_DANGER = "#DC2626"  # red
 
 PALETTE = [
-    C_ACCENT, C_PRIMARY, "#0EA5E9", C_SAGE,
-    C_GOLD, C_TERRA, "#8B5CF6", "#DB2777"
+    C_ACCENT,
+    C_PRIMARY,
+    "#0EA5E9",
+    C_SAGE,
+    C_GOLD,
+    C_TERRA,
+    "#8B5CF6",
+    "#DB2777",
 ]
 
 
@@ -52,7 +59,7 @@ def fmt_large(n, decimals: int = 2) -> str:
 def hex_rgba(hex_color: str, alpha: float) -> str:
     h = hex_color.lstrip("#")
     if len(h) == 3:
-        h = "".join([c*2 for c in h])
+        h = "".join([c * 2 for c in h])
     r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
     return f"rgba({r},{g},{b},{alpha})"
 
@@ -62,18 +69,19 @@ def kpi(label: str, value: str, sub: str = "", color: str = C_TEXT) -> str:
     """Return HTML for a KPI card."""
     sub_html = (
         f"<p style=\"font-family:'Inter',sans-serif;font-size:0.75rem;"
-        f"color:{C_TEXT_LITE};margin:0.3rem 0 0;line-height:1.35;\">{sub}</p>"
-        if sub else ""
+        f'color:{C_TEXT_LITE};margin:0.3rem 0 0;line-height:1.35;">{sub}</p>'
+        if sub
+        else ""
     )
     return (
-        f"<div style=\"background:{C_SURFACE};border:1px solid {C_BORDER};"
+        f'<div style="background:{C_SURFACE};border:1px solid {C_BORDER};'
         f"border-radius:8px;padding:1.25rem;box-sizing:border-box;height:100%;"
-        f"box-shadow:0 1px 2px 0 rgba(0,0,0,0.05);\">"
+        f'box-shadow:0 1px 2px 0 rgba(0,0,0,0.05);">'
         f"<p style=\"font-family:'Inter',sans-serif;font-size:0.65rem;font-weight:600;"
         f"text-transform:uppercase;letter-spacing:0.05em;color:{C_TEXT_MID};"
-        f"margin:0 0 0.5rem;\">{label}</p>"
+        f'margin:0 0 0.5rem;">{label}</p>'
         f"<p style=\"font-family:'JetBrains Mono',monospace;font-size:1.6rem;"
-        f"font-weight:600;color:{color};margin:0;line-height:1.1;\">{value}</p>"
+        f'font-weight:600;color:{color};margin:0;line-height:1.1;">{value}</p>'
         f"{sub_html}</div>"
     )
 
@@ -81,15 +89,17 @@ def kpi(label: str, value: str, sub: str = "", color: str = C_TEXT) -> str:
 def page_header(title: str, subtitle: str = "") -> None:
     """Render a modern page header."""
     import streamlit as st
+
     sub_html = (
         f"<p style=\"font-family:'Inter',sans-serif;color:{C_TEXT_MID};"
-        f"font-size:0.95rem;margin:0.25rem 0 1.5rem;line-height:1.5;\">{subtitle}</p>"
-        if subtitle else "<div style=\"margin-bottom:1.5rem;\"></div>"
+        f'font-size:0.95rem;margin:0.25rem 0 1.5rem;line-height:1.5;">{subtitle}</p>'
+        if subtitle
+        else '<div style="margin-bottom:1.5rem;"></div>'
     )
     st.markdown(
         f"<h1 style=\"font-family:'Inter',sans-serif;"
         f"font-weight:700;font-size:2rem;color:{C_TEXT};margin:0;"
-        f"letter-spacing:-0.03em;line-height:1.2;\">{title}</h1>{sub_html}",
+        f'letter-spacing:-0.03em;line-height:1.2;">{title}</h1>{sub_html}',
         unsafe_allow_html=True,
     )
 
@@ -97,10 +107,11 @@ def page_header(title: str, subtitle: str = "") -> None:
 def section_label(text: str, margin_top: str = "0") -> None:
     """Render a small all-caps section label."""
     import streamlit as st
+
     st.markdown(
         f"<p style=\"font-family:'Inter',sans-serif;font-size:0.65rem;font-weight:700;"
         f"text-transform:uppercase;letter-spacing:0.05em;color:{C_TEXT_LITE};"
-        f"margin:{margin_top} 0 0.5rem;\"> {text}</p>",
+        f'margin:{margin_top} 0 0.5rem;"> {text}</p>',
         unsafe_allow_html=True,
     )
 
@@ -108,12 +119,13 @@ def section_label(text: str, margin_top: str = "0") -> None:
 def callout(text: str, color: str = C_PRIMARY) -> None:
     """Inline callout / annotation box."""
     import streamlit as st
+
     bg_color = hex_rgba(color, 0.05)
     st.markdown(
-        f"<div style=\"background:{bg_color};border-left:4px solid {color};"
-        f"border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin:0.75rem 0;\">"
+        f'<div style="background:{bg_color};border-left:4px solid {color};'
+        f'border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin:0.75rem 0;">'
         f"<p style=\"font-family:'Inter',sans-serif;font-size:0.9rem;color:{C_TEXT};"
-        f"margin:0;line-height:1.5;font-weight:500;\">{text}</p></div>",
+        f'margin:0;line-height:1.5;font-weight:500;">{text}</p></div>',
         unsafe_allow_html=True,
     )
 
@@ -483,4 +495,5 @@ hr {
 
 def inject_css() -> None:
     import streamlit as st
+
     st.html(_CSS)

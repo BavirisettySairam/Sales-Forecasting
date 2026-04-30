@@ -7,4 +7,3 @@ from src.db.session import get_db
 
 def get_db_dep() -> Generator[Session, None, None]:
     yield from get_db()
-

@@ -104,18 +104,13 @@ def time_series_cv(
             forecast_df = forecaster.predict(horizon)
 
             # Aggregate actual values to national level (sum across states per date)
-            actual = (
-                test.groupby("date")[target_col].sum().sort_index().values
-            )
+            actual = test.groupby("date")[target_col].sum().sort_index().values
             predicted = forecast_df["predicted_value"].values
             n = min(len(actual), len(predicted))
             metrics = calculate_metrics(actual[:n], predicted[:n])
             fold_metrics.append(metrics)
             logger.info(
-                "CV fold done",
-                fold=fold + 1,
-                cutoff=str(cutoff)[:10],
-                **metrics
+                "CV fold done", fold=fold + 1, cutoff=str(cutoff)[:10], **metrics
             )
         except Exception as exc:
             logger.warning("CV fold failed", fold=fold + 1, error=str(exc))

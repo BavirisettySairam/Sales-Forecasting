@@ -14,6 +14,7 @@ from loguru import logger
 # Step 1: Load & normalise columns
 # ---------------------------------------------------------------------------
 
+
 def load_raw(path: str) -> pd.DataFrame:
     """Read the CSV, drop the Category column, and normalise remaining columns."""
     df = pd.read_csv(path)
@@ -48,6 +49,7 @@ def load_raw(path: str) -> pd.DataFrame:
 # Step 2: Remove exact duplicates
 # ---------------------------------------------------------------------------
 
+
 def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     before = len(df)
     df = df.drop_duplicates()
@@ -60,6 +62,7 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Step 3: Aggregate duplicate (state, date) combinations
 # ---------------------------------------------------------------------------
+
 
 def aggregate_duplicate_dates(df: pd.DataFrame) -> pd.DataFrame:
     """Sum Total for rows sharing the same state + date."""
@@ -74,6 +77,7 @@ def aggregate_duplicate_dates(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Step 4: Fill missing dates per state
 # ---------------------------------------------------------------------------
+
 
 def fill_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
     """For each state, create a complete daily date range and expose gaps."""
@@ -94,6 +98,7 @@ def fill_missing_dates(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Step 5: Impute missing values
 # ---------------------------------------------------------------------------
+
 
 def impute_missing(df: pd.DataFrame, method: str = "interpolate") -> pd.DataFrame:
     """Fill missing Total values per state."""
@@ -120,6 +125,7 @@ def impute_missing(df: pd.DataFrame, method: str = "interpolate") -> pd.DataFram
 # ---------------------------------------------------------------------------
 # Step 6: Outlier detection — cap at IQR fences per state
 # ---------------------------------------------------------------------------
+
 
 def handle_outliers(
     df: pd.DataFrame,
@@ -153,6 +159,7 @@ def handle_outliers(
 # Step 7: Aggregate to weekly (Monday-anchored, sum of Total)
 # ---------------------------------------------------------------------------
 
+
 def aggregate_to_weekly(df: pd.DataFrame) -> pd.DataFrame:
     """Resample daily data to weekly (W-MON) by summing Total per state."""
     df = df.copy().drop(columns=["is_outlier"], errors="ignore")
@@ -180,6 +187,7 @@ def aggregate_to_weekly(df: pd.DataFrame) -> pd.DataFrame:
 # Step 8: Sort
 # ---------------------------------------------------------------------------
 
+
 def sort_data(df: pd.DataFrame) -> pd.DataFrame:
     return df.sort_values(["state", "date"]).reset_index(drop=True)
 
@@ -187,6 +195,7 @@ def sort_data(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
+
 
 def clean(
     df: pd.DataFrame,

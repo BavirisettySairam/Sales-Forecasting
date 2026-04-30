@@ -4,9 +4,7 @@ from fastapi import HTTPException, Request
 
 
 class RateLimiter:
-    def __init__(
-        self, max_requests: int = 100, window_seconds: int = 60
-    ):
+    def __init__(self, max_requests: int = 100, window_seconds: int = 60):
         self.max_requests = max_requests
         self.window = window_seconds
         self._store: dict[str, list[float]] = {}
@@ -50,4 +48,3 @@ class RateLimiter:
             "X-RateLimit-Remaining": str(remaining - 1),
             "X-RateLimit-Reset": str(reset_at),
         }
-

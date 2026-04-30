@@ -109,9 +109,7 @@ else:
 
     paired = view.dropna(subset=["CV MAPE %", "Test MAPE %"])
     best_cv = view["CV MAPE %"].min() if view["CV MAPE %"].notna().any() else None
-    best_test = (
-        view["Test MAPE %"].min() if view["Test MAPE %"].notna().any() else None
-    )
+    best_test = view["Test MAPE %"].min() if view["Test MAPE %"].notna().any() else None
     gap = (
         (paired["Test MAPE %"] - paired["CV MAPE %"]).mean()
         if not paired.empty

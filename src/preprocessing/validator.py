@@ -5,7 +5,7 @@ from pandera import Check, Column, DataFrameSchema
 raw_schema = DataFrameSchema(
     columns={
         "state": Column(str, nullable=False),
-        "date":  Column(pa.DateTime, nullable=False),
+        "date": Column(pa.DateTime, nullable=False),
         "total": Column(float, checks=Check.ge(0), nullable=False),
     },
     coerce=True,
@@ -16,7 +16,7 @@ raw_schema = DataFrameSchema(
 clean_schema = DataFrameSchema(
     columns={
         "state": Column(str, nullable=False, checks=Check.str_length(min_value=2)),
-        "date":  Column(pa.DateTime, nullable=False),
+        "date": Column(pa.DateTime, nullable=False),
         "total": Column(float, nullable=False, checks=[Check.ge(0)]),
     },
     coerce=True,

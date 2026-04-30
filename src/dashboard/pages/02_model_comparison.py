@@ -132,8 +132,7 @@ with tab_leader:
             for _, row in ranked.iterrows()
         ]
         colors = [
-            C_GOLD if row["Champion"] else C_PRIMARY
-            for _, row in ranked.iterrows()
+            C_GOLD if row["Champion"] else C_PRIMARY for _, row in ranked.iterrows()
         ]
         fig = go.Figure(
             go.Bar(

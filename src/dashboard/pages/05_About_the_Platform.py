@@ -51,7 +51,7 @@ with c1:
         "For each state, all 5 models are trained and evaluated using an "
         "**Expanding Window Cross-Validation** approach. The model that achieves the "
         "lowest **Mean Absolute Percentage Error (MAPE)** is automatically crowned "
-        "the \"Champion\" and promoted to production."
+        'the "Champion" and promoted to production.'
     )
 
     st.divider()

@@ -148,9 +148,7 @@ def run_training(
                 test_dates = sorted(test_df["date"].unique())
                 test_horizon = len(test_dates)
                 fc_df = dev_forecaster.predict(test_horizon)
-                actual_test = (
-                    test_df.groupby("date")["total"].sum().sort_index().values
-                )
+                actual_test = test_df.groupby("date")["total"].sum().sort_index().values
                 n = min(len(actual_test), len(fc_df))
                 test_m = calculate_metrics(
                     actual_test[:n], fc_df["predicted_value"].values[:n]
@@ -304,7 +302,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--states",
         nargs="+",
-        help="Train specific states only (space-separated, " \
+        help="Train specific states only (space-separated, "
         "e.g. --states California Texas)",
     )
     parser.add_argument(

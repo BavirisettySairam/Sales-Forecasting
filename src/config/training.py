@@ -68,9 +68,7 @@ def enabled_models(config: dict[str, Any], available: list[str]) -> list[str]:
     if not models_section:
         return available
     return [
-        name
-        for name in available
-        if models_section.get(name, {}).get("enabled", True)
+        name for name in available if models_section.get(name, {}).get("enabled", True)
     ]
 
 

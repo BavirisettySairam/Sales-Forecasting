@@ -75,11 +75,13 @@ app.include_router(retrain.router)
 
 @app.get("/", include_in_schema=False)
 async def root():
-    return JSONResponse({
-        "name": "Forecasting System API",
-        "version": "1.0.0",
-        "status": "ok",
-        "docs": "/docs",
-        "health": "/health",
-        "endpoints": ["/health", "/forecast", "/models", "/retrain"],
-    })
+    return JSONResponse(
+        {
+            "name": "Forecasting System API",
+            "version": "1.0.0",
+            "status": "ok",
+            "docs": "/docs",
+            "health": "/health",
+            "endpoints": ["/health", "/forecast", "/models", "/retrain"],
+        }
+    )

@@ -14,7 +14,7 @@ _renames = {
     "02_model_comparison.py": "02_Model_Comparison.py",
     "03_training_history.py": "03_Training_History.py",
     "04_api_health.py": "04_API_Health.py",
-    "05_about.py": "05_About_the_Platform.py"
+    "05_about.py": "05_About_the_Platform.py",
 }
 for _old, _new in _renames.items():
     _old_path = os.path.join(_pages_dir, _old)
