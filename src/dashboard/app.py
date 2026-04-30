@@ -1,6 +1,12 @@
 import os
 import sys
 
+import httpx
+import pandas as pd
+import streamlit as st
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 # Auto-rename pages to fix sidebar casing (since Streamlit uses filenames)
 _pages_dir = os.path.join(os.path.dirname(__file__), "pages")
 _renames = {
@@ -17,12 +23,6 @@ for _old, _new in _renames.items():
             os.rename(_old_path, os.path.join(_pages_dir, _new))
         except Exception:
             pass
-
-import httpx
-import pandas as pd
-import streamlit as st
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from theme import (  # noqa: E402
     C_ACCENT,
     C_BORDER,
@@ -36,7 +36,6 @@ from theme import (  # noqa: E402
     fmt_large,
     inject_css,
     kpi,
-    page_header,
     section_label,
 )
 
@@ -98,15 +97,18 @@ regions = sorted({m["state"] for m in regional_models})
 
 st.markdown(
     f"""
-    <div style="background: linear-gradient(135deg, {C_PRIMARY} 0%, #1E293B 100%); 
-    padding: 3rem 2rem; border-radius: 16px; margin-bottom: 2.5rem; color: white; 
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);">
-        <h1 style="font-family: 'Fraunces', serif; font-size: 2.8rem; font-weight: 300; 
-        margin: 0 0 0.8rem 0; color: white !important;">Sales Intelligence Platform</h1>
-        <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; opacity: 0.95; margin: 0; 
-        max-width: 650px; line-height: 1.6;">
-            Advanced machine learning forecasting with automated champion selection across all U.S. regions. 
-            Five model families competing per region to deliver unparalleled accuracy.
+    <div style="background: linear-gradient(135deg, {C_PRIMARY} 0%, #1E293B 100%);
+    padding: 3rem 2rem; border-radius: 16px; margin-bottom: 2.5rem; color: white;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1),
+    0 8px 10px -6px rgba(0,0,0,0.1);">
+        <h1 style="font-family: 'Fraunces', serif; font-size: 2.8rem;
+        font-weight: 300; margin: 0 0 0.8rem 0; color: white !important;">
+        Sales Intelligence Platform</h1>
+        <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem;
+        opacity: 0.95; margin: 0; max-width: 650px; line-height: 1.6;">
+            Advanced machine learning forecasting with automated champion selection
+            across all U.S. regions. Five model families competing per region
+            to deliver unparalleled accuracy.
         </p>
     </div>
     """,
