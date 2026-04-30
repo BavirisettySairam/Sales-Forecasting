@@ -1,6 +1,23 @@
 import os
 import sys
 
+# Auto-rename pages to fix sidebar casing (since Streamlit uses filenames)
+_pages_dir = os.path.join(os.path.dirname(__file__), "pages")
+_renames = {
+    "01_forecast.py": "01_Forecast_Explorer.py",
+    "02_model_comparison.py": "02_Model_Comparison.py",
+    "03_training_history.py": "03_Training_History.py",
+    "04_api_health.py": "04_API_Health.py",
+    "05_about.py": "05_About_the_Platform.py"
+}
+for _old, _new in _renames.items():
+    _old_path = os.path.join(_pages_dir, _old)
+    if os.path.exists(_old_path):
+        try:
+            os.rename(_old_path, os.path.join(_pages_dir, _new))
+        except Exception:
+            pass
+
 import httpx
 import pandas as pd
 import streamlit as st
@@ -79,10 +96,21 @@ champions = [m for m in regional_models if m.get("is_champion")]
 versions = sorted({m.get("version", "") for m in models if m.get("version")})
 regions = sorted({m["state"] for m in regional_models})
 
-page_header(
-    "Regional Sales Forecasting",
-    "Five model families per region, 70/15/15 chronological split, "
-    "one full-history champion artifact per region.",
+st.markdown(
+    f"""
+    <div style="background: linear-gradient(135deg, {C_PRIMARY} 0%, #1E293B 100%); 
+    padding: 3rem 2rem; border-radius: 16px; margin-bottom: 2.5rem; color: white; 
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);">
+        <h1 style="font-family: 'Fraunces', serif; font-size: 2.8rem; font-weight: 300; 
+        margin: 0 0 0.8rem 0; color: white !important;">Sales Intelligence Platform</h1>
+        <p style="font-family: 'Inter', sans-serif; font-size: 1.1rem; opacity: 0.95; margin: 0; 
+        max-width: 650px; line-height: 1.6;">
+            Advanced machine learning forecasting with automated champion selection across all U.S. regions. 
+            Five model families competing per region to deliver unparalleled accuracy.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 if not api_ok:

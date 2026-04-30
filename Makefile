@@ -22,6 +22,11 @@ serve:
 dashboard:
 	$(PYTHON) -m streamlit run src/dashboard/app.py --server.port 8501
 
+run:
+	@echo "Starting API in the background and Dashboard in the foreground..."
+	start /B $(PYTHON) -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+	$(PYTHON) -m streamlit run src/dashboard/app.py --server.port 8501
+
 test:
 	poetry run pytest tests/ -v --tb=short
 

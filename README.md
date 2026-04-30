@@ -78,13 +78,10 @@ poetry install
 alembic upgrade head
 
 # Train models
-make train
+poetry run python -m src.pipeline.train --data data.csv --all-states --cv-splits 3
 
-# Start API (port 8000)
-make serve
-
-# Start dashboard (port 8501, in a second terminal)
-make dashboard
+# Start the Backend API and Dashboard simultaneously
+.\run.ps1
 ```
 
 ---
@@ -93,11 +90,12 @@ make dashboard
 
 ```bash
 # Train all 5 models on all states (full run, takes time)
-make train
+poetry run python -m src.pipeline.train \
+  --data data.csv \
+  --all-states \
+  --cv-splits 3
 
-# Or via Python directly
-python -m src.pipeline.train \
-  --data data/raw/dataset.csv \
+# Or a single state
   --config config/training_config.yaml \
   --horizon 8 \
   --cv-splits 5
@@ -324,14 +322,11 @@ Running 100 stochastic forward passes through a dropout-enabled LSTM approximate
 ## Running Tests
 
 ```bash
-# Full suite
-make test
-
-# With coverage
-pytest tests/ -v --tb=short
+# Full suite with coverage
+poetry run pytest tests/ -v --tb=short
 
 # Single module
-pytest tests/test_security.py -v
+poetry run pytest tests/test_security.py -v
 ```
 
 ---

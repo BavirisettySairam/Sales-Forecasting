@@ -227,14 +227,13 @@ p { font-family: 'Inter', sans-serif !important; color: #374151 !important; }
 [data-testid="stSidebarNav"] a,
 [data-testid="stSidebarNav"] span {
     font-family: 'Inter', sans-serif !important;
-    font-size: 1.1rem !important;
+    font-size: 1.2rem !important;
     font-weight: 500 !important;
     color: #4B5563 !important;
     border-radius: 12px !important;
     padding: 0.7rem 0.6rem !important;
     margin-bottom: 0.3rem !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    text-transform: capitalize !important;
     border: 1px solid transparent !important;
 }
 [data-testid="stSidebarNav"] [aria-selected="true"] {
