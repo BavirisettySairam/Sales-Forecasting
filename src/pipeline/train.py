@@ -304,7 +304,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--states",
         nargs="+",
-        help="Train specific states only (space-separated, e.g. --states California Texas)",
+        help="Train specific states only (space-separated, " \
+        "e.g. --states California Texas)",
     )
     parser.add_argument(
         "--all-states",
